@@ -1,0 +1,307 @@
+#include "config_parser.hh"
+
+// #define BOOST_SPIRIT_DEBUG 1
+
+#define BOOST_SPIRIT_USE_PHOENIX_V3 1
+
+#include <boost/fusion/include/std_pair.hpp>
+#include <boost/fusion/include/adapt_adt.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix_function.hpp> 
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/variant.hpp>
+#include <libnova/julian_day.h>
+#include <libnova/ln_types.h>
+
+#include "exceptions.hh"
+#include "now.hh"
+
+namespace phoenix = boost::phoenix;
+namespace spirit = boost::spirit;
+namespace ascii = spirit::ascii;
+namespace qi = spirit::qi;
+using config_parser::Callback;
+
+namespace {
+
+typedef std::pair<std::string, std::string> pair_type;
+typedef boost::variant<std::string, pair_type> config_variant;
+
+struct parser_proxy
+    : boost::static_visitor<>
+{
+    typedef config_variant value_type;
+
+    Callback callback_;
+
+    std::string current_name;
+
+    parser_proxy(const Callback & callback)
+        : callback_(callback),
+          current_name("core")
+    {
+    }
+
+    void push_back(const config_variant & v)
+    {
+        boost::apply_visitor(*this, v);
+    }
+
+    void operator()(const std::string & section)
+    {
+        current_name = section;
+    }
+
+    void operator()(const pair_type & p)
+    {
+        callback_(current_name + '.' + p.first, p.second);
+    }
+
+    config_variant & get() const
+    {
+        static config_variant p;
+        return p;
+    }
+};
+
+using ascii::alpha;
+using ascii::alnum;
+using ascii::blank;
+using ascii::char_;
+using ascii::graph;
+using ascii::space;
+using spirit::_1;
+using spirit::_val;
+using spirit::double_;
+using spirit::eoi;
+using spirit::eol;
+using spirit::lexeme;
+using spirit::lit;
+using spirit::omit;
+using spirit::skip;
+
+template <typename Iterator, typename Skipper>
+class config_grammar
+    : public qi::grammar<Iterator, parser_proxy(), Skipper>
+{
+public:
+    config_grammar()
+        : config_grammar::base_type(config)
+    {
+        identifier =
+            alpha[_val += _1] >> *(char_('.') | alnum)[_val += _1];
+
+        value =
+            +graph[_val += _1] |
+            lexeme['"' >> *(ascii::char_ - '"')[_val += _1] >> '"'];
+
+        entry_rule =
+            identifier >> value >> (eol | eoi);
+
+        section =
+            "[" >> identifier >> "]";
+
+        config =
+            *(section | skip(blank)[entry_rule]);
+
+#ifdef BOOST_SPIRIT_DEBUG
+        BOOST_SPIRIT_DEBUG_NODE(identifier);
+        BOOST_SPIRIT_DEBUG_NODE(value);
+        BOOST_SPIRIT_DEBUG_NODE(entry_rule);
+        BOOST_SPIRIT_DEBUG_NODE(section);
+        BOOST_SPIRIT_DEBUG_NODE(config);
+#endif
+    }
+
+    qi::rule<Iterator, parser_proxy(), Skipper> config;
+    qi::rule<Iterator, std::string()> identifier, value, section;
+    qi::rule<Iterator, pair_type(), ascii::blank_type> entry_rule;
+};
+
+const double rad2deg(45. / atan(1.));
+
+template <typename Iterator>
+class angle_grammar
+    : public qi::grammar<Iterator, double()>
+{
+public:
+    angle_grammar()
+        : angle_grammar::base_type(start)
+    {
+        radians = double_[_val = rad2deg * _1] >> -omit['r'];
+        degrees = double_[_val = _1] >> omit['d'] >>
+            -(double_[_val += _1 / 60.] >> omit['m'] >>
+              -(double_[_val += _1/ 3600.] >> omit['s']));
+        start = (degrees | radians) >> eoi;
+    }
+
+    qi::rule<Iterator, double()> start;
+    qi::rule<Iterator, double()> radians;
+    qi::rule<Iterator, double()> degrees;
+};
+
+struct julianepoch_to_juliandate_imp
+{
+    typedef double result_type;
+
+    double operator()(double epoch) const
+    {
+        return (epoch - 2000.0) * 365.25 + 2451545.0;
+    }
+};
+phoenix::function<julianepoch_to_juliandate_imp> julianepoch_to_juliandate;
+
+struct parseddate_to_juliandate_imp
+{
+    typedef double result_type;
+
+    double operator()(int h, int m, boost::optional<double> s,
+                      boost::optional<boost::fusion::vector3<int, int, int>> date,
+                      boost::optional<int> tz) const
+    {
+        ln_zonedate zdate;
+
+        if (date)
+        {
+            using boost::fusion::at_c;
+            zdate.days = at_c<2>(*date);
+            zdate.months = at_c<1>(*date);
+            zdate.years = at_c<0>(*date);
+        }
+        else
+        {
+            ln_date now(Now::get());
+            zdate.days = now.days;
+            zdate.months = now.months;
+            zdate.years = now.years;
+        }
+
+        if (! s)
+            s = 0;
+
+        zdate.seconds = *s;
+        zdate.minutes = m;
+        zdate.hours = h;
+
+        if (tz)
+            zdate.gmtoff = *tz * 3600;
+        else
+            zdate.gmtoff = 0;
+
+        return ln_get_julian_local_date(&zdate);
+    }
+};
+phoenix::function<parseddate_to_juliandate_imp> parseddate_to_juliandate;
+
+struct now_get_imp
+{
+    typedef double result_type;
+
+    double operator()() const
+    {
+        auto d(Now::get());
+        return ln_get_julian_day(&d);
+    }
+};
+phoenix::function<now_get_imp> now_get;
+
+template <typename Iterator>
+class timestamp_grammar
+        : public qi::grammar<Iterator, double()>
+{
+public:
+    timestamp_grammar()
+        : timestamp_grammar::base_type(start)
+    {
+        using namespace boost::spirit::qi;
+        start = (double_ >> "JD")[_val = _1]
+            | ("J" >> double_)[_val = julianepoch_to_juliandate(_1)]
+            | (
+                int_ >> ":" >> int_ >> -(":" >> double_) >>
+                -(omit[space] >> int_ >> "-" >> int_ >> "-" >> int_) >>
+                -(omit[space] >> int_)
+                )
+            [_val = parseddate_to_juliandate(_1, _2, _3, _4, _5)]
+            | lit("now")[_val = now_get()]
+            ;
+    }
+
+    qi::rule<Iterator, double()> start;
+};
+
+#ifdef BOOST_SPIRIT_DEBUG
+    // SPIRIT_DEBUG doesn't work otherwise
+    std::ostream & operator<<(std::ostream & os, const config_variant & v)
+    {
+        using boost::operator<<;
+        os << v;
+        return os;
+    }
+#endif
+
+}
+
+namespace boost { namespace spirit { namespace traits
+{
+
+template <>
+struct push_back_container<parser_proxy, config_variant>
+{
+    static bool call(parser_proxy & t, const config_variant & val)
+    {
+        t.push_back(val);
+        return true;
+    }
+};
+
+}}}
+
+BOOST_FUSION_ADAPT_ADT(
+    parser_proxy,
+    (const config_variant &, const config_variant &, obj.get(), obj.push_back(val))
+)
+
+namespace config_parser
+{
+
+void parse_config(std::istream & os, const Callback & callback)
+{
+    std::stringstream ss;
+    ss << os.rdbuf();
+    std::string s(ss.str());
+    std::cout << s << "\n===\n";
+    std::string::const_iterator iter(s.cbegin()), iter_end(s.cend());
+
+    auto skipper(ascii::space | '#' >> *(qi::char_ - qi::eol) >> qi::eol);
+    config_grammar<std::string::const_iterator, decltype(skipper)> pars;
+    parser_proxy t(callback);
+    std::cout << phrase_parse(iter, iter_end, pars, skipper, t) << std::endl;
+}
+
+double parse_angle(const std::string & in)
+{
+    angle_grammar<std::string::const_iterator> pars;
+    double ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("angle", in);
+    }
+    return ret;
+}
+
+double parse_timestamp(const std::string & in)
+{
+    timestamp_grammar<std::string::const_iterator> pars;
+    double ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("timestamp", in);
+    }
+    return ret;
+}
+
+}

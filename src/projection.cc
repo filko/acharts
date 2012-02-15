@@ -1,0 +1,68 @@
+#include "projection.hh"
+
+#include <cmath>
+#include <iostream>
+#include <libnova/utility.h>
+#include <stdexcept>
+
+SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
+    : ra(ln_deg_to_rad(rh.ra)),
+      dec(ln_deg_to_rad(rh.dec))
+{
+}
+
+Projection::Projection(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
+    : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center)
+{
+    if (0. == apparent_canvas_.ra)
+    {
+        if (0. == apparent_canvas_.dec)
+            throw std::runtime_error("Need to specify at least one apparent size dimention non-zero!");
+
+        apparent_canvas_.ra = apparent_canvas_.dec * canvas_.x / canvas_.y;
+    }
+    else if (0. == apparent_canvas_.dec)
+    {
+        apparent_canvas_.dec = apparent_canvas_.ra * canvas_.y / canvas_.x;
+    }
+}
+
+Projection::~Projection()
+{
+}
+
+class AzimuthalEquidistantProjection
+    : public Projection
+{
+public:
+    AzimuthalEquidistantProjection(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+                                   const ln_equ_posn & center)
+        : Projection(canvas, apparent_canvas, center)
+    {
+    }
+
+    virtual OutputCoord project(const ln_equ_posn & pos)
+    {
+        double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
+        double cosc(sin(center_.dec) * sin(dec) + cos(center_.dec) * cos(dec) * cos(ra - center_.ra));
+        double c(acos(cosc));
+        double k;
+        if (c == 0)
+            k = 1;
+        else
+            k = c / sin(c);
+        double x(k * cos(dec) * sin(ra - center_.ra));
+        double y(k * (cos(center_.dec) * sin(dec) - sin(center_.dec) * cos(dec) * cos(ra - center_.ra)));
+
+        // negate x, because for svg up is down
+        // negate y, because right ascention is going left to right
+        return OutputCoord(-x * canvas_.x / apparent_canvas_.ra,
+                           -y * canvas_.y / apparent_canvas_.dec);
+    }
+};
+
+std::shared_ptr<Projection> ProjectionFactory::create(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+                                                      const ln_equ_posn & center)
+{
+    return std::make_shared<AzimuthalEquidistantProjection>(canvas, apparent_canvas, center);
+}
