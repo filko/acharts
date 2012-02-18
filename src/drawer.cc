@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cstring>
 #include <deque>
-#include <iostream>
 #include <fstream>
 #include <stdexcept>
 
@@ -191,19 +190,9 @@ void Drawer::draw(const Star & star)
 void Drawer::draw(const std::vector<ln_equ_posn> & path)
 {
     std::vector<OutputCoord> ret;
-    double min(0), max(0);
     for (auto i(path.begin()), i_end(path.end());
          i != i_end; ++i)
-    {
-        auto p(imp_->projection_->project(*i));
-        if (p.y > max)
-            max = p.y;
-        else if (p.y < min)
-            min = p.y;
-
-        ret.push_back(p);
-    }
-    std::cout << max << ' ' << min << '\n';
+        ret.push_back(imp_->projection_->project(*i));
     imp_->shapes_.push_back(std::make_shared<svg_cbezier>(std::move(ret), "#888888", 0.1));
 }
 
