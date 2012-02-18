@@ -124,22 +124,28 @@ struct svg_text
 struct Drawer::Impl
 {
     std::shared_ptr<Projection> projection_;
-    const OutputCoord canvas_;
+    const OutputCoord canvas_, canvas_start_;
     std::deque<std::shared_ptr<svg_shape>> shapes_;
 
-    Impl(const OutputCoord & canvas)
-        : canvas_(canvas)
+    Impl(const OutputCoord & canvas, const OutputCoord & scanvas)
+        : canvas_(canvas), canvas_start_(scanvas)
     {
+    }
+
+    bool in_canvas(const OutputCoord & oc)
+    {
+        return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
+            oc.x <= canvas_.x && oc.x <= canvas_.y;
     }
 };
 
 Drawer::Drawer(const OutputCoord & canvas)
-    : imp_(new Impl(canvas))
+    : imp_(new Impl(canvas, OutputCoord(- canvas.x / 2., - canvas.y / 2.)))
 {
     std::string background_color("white");
-    double hx(imp_->canvas_.x / 2.), hy(imp_->canvas_.y / 2.);
     imp_->shapes_.push_back(
-        std::make_shared<svg_rect>(OutputCoord(-hx, -hy), OutputCoord(imp_->canvas_.x, imp_->canvas_.y), background_color));
+        std::make_shared<svg_rect>(OutputCoord(imp_->canvas_start_.x, imp_->canvas_start_.y),
+                                   OutputCoord(imp_->canvas_.x, imp_->canvas_.y), background_color));
 }
 
 Drawer::~Drawer()
@@ -160,9 +166,9 @@ void Drawer::store(const char * file) const
 
     of << svg_preambule;
 
-    double hx(imp_->canvas_.x / 2.), hy(imp_->canvas_.y / 2.);
     of << "<svg width='" << imp_->canvas_.x << "mm' height='" << imp_->canvas_.y << "mm' "
-        "viewBox='" << -hx << ' ' << -hy << ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
+        "viewBox='" << imp_->canvas_start_.x << ' ' << imp_->canvas_start_.y <<
+        ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
         "xmlns='http://www.w3.org/2000/svg' version='1.1'>\n";
 
     for (auto shape(imp_->shapes_.begin()), shape_end(imp_->shapes_.end());
@@ -180,6 +186,9 @@ void Drawer::draw(const Star & star)
 
     double s(2. * exp(-star.vmag_ / e));
     OutputCoord coord(imp_->projection_->project(star.pos_));
+    if (! imp_->in_canvas(coord))
+        return;
+
     auto c(std::make_shared<svg_circle>(coord, s, black, .5 * s, white));
     imp_->shapes_.push_back(c);
 

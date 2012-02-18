@@ -5,6 +5,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "stars.hh"
+
 class CatalogReader
 {
     std::istream & stream_;
@@ -63,9 +65,26 @@ public:
     }
 };
 
+struct Catalogue::Implementation
+{ 
+    typedef std::vector<Star> Stars;
+    Stars stars_;
+    std::string path_;
+};
+
+Catalogue::Catalogue()
+    : imp_(new Implementation())
+{
+}
+
+Catalogue::~Catalogue()
+{
+    delete imp_;
+}
+
 void Catalogue::load()
 {
-    std::ifstream file(path_.c_str());
+    std::ifstream file(imp_->path_.c_str());
     if (! file)
         throw std::runtime_error("Can't open catalog!");
 
@@ -81,7 +100,7 @@ void Catalogue::load()
             };
 
             Star c(reader.get_string(4, 10), hpos, reader.get_double(102, 5));
-            stars_.push_back(c);
+            imp_->stars_.push_back(c);
         }
         catch (const std::runtime_error &)
         {
@@ -89,5 +108,43 @@ void Catalogue::load()
         }
     }
 
-    std::sort(stars_.begin(), stars_.end(), Star::by_mag());
+    std::sort(imp_->stars_.begin(), imp_->stars_.end(), Star::by_mag());
+}
+
+const ConstStarIterator Catalogue::begin_stars() const
+{
+    return ConstStarIterator(this, 0);
+}
+
+const ConstStarIterator Catalogue::end_stars() const
+{
+    return ConstStarIterator(this, imp_->stars_.size());
+}
+
+void Catalogue::path(const std::string & path)
+{
+    imp_->path_ = path;
+}
+
+const std::string & Catalogue::path() const
+{
+    return imp_->path_;
+}
+
+const Star & ConstStarIterator::operator*() const
+{
+    return cat_->imp_->stars_[index_];
+}
+
+const Star * ConstStarIterator::operator->() const
+{
+    return &(**this);
+}
+
+bool ConstStarIterator::operator==(const ConstStarIterator & rhs) const
+{
+    if (cat_ != rhs.cat_)
+        return false;
+
+    return index_ == rhs.index_;
 }
