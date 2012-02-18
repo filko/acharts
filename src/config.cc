@@ -2,8 +2,10 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/variant.hpp>
+#include <deque>
 #include <fstream>
 
+#include "catalogue.hh"
 #include "config_parser.hh"
 #include "exceptions.hh"
 
@@ -31,13 +33,24 @@ std::ostream & operator<<(std::ostream & os, const timestamp & t)
     return os;
 }
 
+struct size
+{
+    double val;
+};
+
+std::ostream & operator<<(std::ostream & os, const size & s)
+{
+    os << "Size: " << s.val << " mm";
+    return os;
+}
+
 struct empty_type {};
 std::ostream & operator<<(std::ostream & os, empty_type)
 {
     return os;
 }
 
-typedef boost::variant<empty_type, angle, timestamp> Option;
+typedef boost::variant<empty_type, angle, timestamp, size, std::string> Option;
 
 namespace
 {
@@ -60,6 +73,16 @@ struct value_parser_visitor
         ts.val = config_parser::parse_timestamp(value_);
     }
 
+    void operator()(std::string & s) const
+    {
+        s = value_;
+    }
+
+    void operator()(size & s) const
+    {
+        s.val = config_parser::parse_size(value_);
+    }
+
     void operator()(empty_type) const
     {
         throw std::runtime_error("Tried to assing to null config tree");
@@ -72,26 +95,72 @@ struct Config::Implementation
 {
     typedef Option value_type;
     boost::property_tree::basic_ptree<std::string, Option> tree;
+    std::string current_section;
+    std::deque<std::shared_ptr<Catalogue>> catalogues;
 
     Implementation()
+        : current_section("core")
     {
         add("core.epoch", timestamp{0.});
 
         add("core.location.latitude", angle{0.});
         add("core.location.longitude", angle{0.});
+
+        add("catalogue.path", "");
+
+        add("canvas.dimensions.x", size{297.});
+        add("canvas.dimensions.y", size{210.});
+
+        add("projection.type", "AzimuthalEquidistant");
+        add("projection.dimensions.x", angle{45.});
+        add("projection.dimensions.y", angle{0.});
+        add("projection.centre.x", angle{0.});
+        add("projection.centre.y", angle{0.});
     }
 
-    void accept(const std::string & path, const std::string & value)
+    void accept_value(const std::string & path, const std::string & value)
     {
         try
         {
             auto & i(tree.get_child(path));
-            boost::apply_visitor(value_parser_visitor(value), i.data());
+
+            if ("catalogue" == current_section)
+            {
+                Option option(i.data());
+                boost::apply_visitor(value_parser_visitor(value), option);
+                if ("catalogue.path" == path)
+                {
+                    catalogues.back()->path(boost::get<std::string>(option));
+                }
+                else
+                {
+                    throw InternalError("Tried setting unknown catalogue property: " + path);
+                }
+            }
+            else
+                boost::apply_visitor(value_parser_visitor(value), i.data());
         }
         catch (const boost::property_tree::ptree_bad_path &)
         {
-            throw std::runtime_error("Tried setting unknown option '" + path + "'");
+            throw ConfigError("Tried setting unknown option '" + path + "'");
         }
+    }
+
+    void accept_section(const std::string & section)
+    {
+        try
+        {
+            tree.get_child(section);
+        }
+        catch (const boost::property_tree::ptree_bad_path &)
+        {
+            throw ConfigError("Tried opening unknown section '" + section + "'");
+        }
+        if ("catalogue" == section)
+        {
+            catalogues.push_back(std::make_shared<Catalogue>());
+        }
+        current_section = section;
     }
 
     void dump() const
@@ -99,6 +168,9 @@ struct Config::Implementation
         for (auto i(tree.begin()), i_end(tree.end());
              i != i_end; ++i)
         {
+            if ("catalogue" == i->first)
+                continue;
+
             std::cout << '[' << i->first << ']' << std::endl;
             dump_section(&i->second);
         }
@@ -142,7 +214,9 @@ Config::Config(int arc, char * arv[])
     if (! f)
         abort();
 
-    config_parser::parse_config(f, [&](const std::string & p, const std::string & v) { imp_->accept(p, v); });
+    config_parser::parse_config(f,
+                                [&](const std::string & s)                        { imp_->accept_section(s); },
+                                [&](const std::string & p, const std::string & v) { imp_->accept_value(p, v); });
 
     imp_->dump();
 }
@@ -156,4 +230,70 @@ std::pair<double, double> Config::location() const
 {
     return std::make_pair(imp_->get<angle>("core.location.latitude").val,
                           imp_->get<angle>("core.location.longitude").val);
+}
+
+const OutputCoord Config::canvas_dimensions() const
+{
+    return OutputCoord(imp_->get<size>("canvas.dimensions.x").val,
+                       imp_->get<size>("canvas.dimensions.y").val);
+}
+
+const std::string Config::projection_type() const
+{
+    return imp_->get<std::string>("projection.type");
+}
+
+const ln_equ_posn Config::projection_centre() const
+{
+    return ln_equ_posn{imp_->get<angle>("projection.centre.x").val,
+                       imp_->get<angle>("projection.centre.y").val};
+}
+
+const ln_equ_posn Config::projection_dimensions() const
+{
+    return ln_equ_posn{imp_->get<angle>("projection.dimensions.x").val,
+                       imp_->get<angle>("projection.dimensions.y").val};
+}
+
+const ConstCatalogueIterator Config::begin_catalogues() const
+{
+    return ConstCatalogueIterator(this, 0);
+}
+    
+const ConstCatalogueIterator Config::end_catalogues() const
+{
+    return ConstCatalogueIterator(this, imp_->catalogues.size());
+}
+
+ConstCatalogueIterator::ConstCatalogueIterator(const Config * config, std::size_t i)
+    : config_(config),
+      index_(i)
+{
+}
+
+ConstCatalogueIterator & ConstCatalogueIterator::operator++()
+{
+    ++index_;
+    return *this;
+}
+
+Catalogue & ConstCatalogueIterator::operator*() const
+{
+    return *config_->imp_->catalogues[index_];
+}
+
+const std::shared_ptr<Catalogue> ConstCatalogueIterator::operator->() const
+{
+    return config_->imp_->catalogues[index_];
+}
+
+bool operator==(const ConstCatalogueIterator & lhs, const ConstCatalogueIterator & rhs)
+{
+    if (lhs.config_ != rhs.config_)
+        return false;
+
+    if (lhs.index_ != rhs.index_)
+        return false;
+
+    return true;
 }
