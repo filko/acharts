@@ -24,27 +24,4 @@ struct Star
     };
 };
 
-class Catalogue
-{
-    typedef std::vector<Star> Stars;
-    Stars stars_;
-
-public:
-    Catalogue()
-    {
-    }
-
-    void load(const std::string & filename);
-
-    std::size_t size() const
-    {
-        return stars_.size();
-    }
-
-    const Stars & get_stars() const
-    {
-        return stars_;
-    }
-};
-
 #endif

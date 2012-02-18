@@ -1,4 +1,5 @@
 add_executable(charts
+  catalogue.cc
   config.cc
   config_parser_i_hate_boost.cc
   drawer.cc
