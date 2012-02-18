@@ -23,4 +23,14 @@ public:
     }
 };
 
+class InternalError
+    : public std::logic_error
+{
+public:
+    explicit InternalError(const std::string & wha)
+        : std::logic_error(wha)
+    {
+    }
+};
+
 #endif
