@@ -7,8 +7,10 @@
 #include <boost/fusion/include/std_pair.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_function.hpp> 
+#include <boost/spirit/include/phoenix_function.hpp>
+#include <boost/spirit/include/phoenix_object.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/support_line_pos_iterator.hpp>
 #include <boost/variant.hpp>
 #include <libnova/julian_day.h>
 #include <libnova/ln_types.h>
@@ -16,28 +18,60 @@
 #include "exceptions.hh"
 #include "now.hh"
 
+typedef std::pair<std::string, std::string> pair_type;
+typedef boost::variant<std::string, pair_type> config_variant;
+
+#ifdef BOOST_SPIRIT_DEBUG
+    namespace std
+    {
+    std::ostream & operator<<(std::ostream & os, const pair_type & p)
+    {
+        os << p.first << ": " << p.second;
+        return os;
+    }
+    }
+#endif
+
+namespace config_parser
+{
+
 namespace phoenix = boost::phoenix;
 namespace spirit = boost::spirit;
 namespace ascii = spirit::ascii;
 namespace qi = spirit::qi;
-using config_parser::Callback;
 
-namespace {
-
-typedef std::pair<std::string, std::string> pair_type;
-typedef boost::variant<std::string, pair_type> config_variant;
+using ascii::alpha;
+using ascii::alnum;
+using ascii::blank;
+using ascii::char_;
+using ascii::graph;
+using ascii::space;
+using spirit::_1;
+using spirit::_2;
+using spirit::_3;
+using spirit::_4;
+using spirit::_val;
+using spirit::double_;
+using spirit::eoi;
+using spirit::eol;
+using spirit::lexeme;
+using spirit::lit;
+using spirit::omit;
+using spirit::skip;
 
 struct parser_proxy
     : boost::static_visitor<>
 {
     typedef config_variant value_type;
 
-    Callback callback_;
+    SectionCallback scal_;
+    ValueCallback vcal_;
 
     std::string current_name;
 
-    parser_proxy(const Callback & callback)
-        : callback_(callback),
+    parser_proxy(const SectionCallback & scal, const ValueCallback & vcal)
+        : scal_(scal),
+          vcal_(vcal),
           current_name("core")
     {
     }
@@ -50,11 +84,12 @@ struct parser_proxy
     void operator()(const std::string & section)
     {
         current_name = section;
+        scal_(section);
     }
 
     void operator()(const pair_type & p)
     {
-        callback_(current_name + '.' + p.first, p.second);
+        vcal_(current_name + '.' + p.first, p.second);
     }
 
     config_variant & get() const
@@ -64,45 +99,54 @@ struct parser_proxy
     }
 };
 
-using ascii::alpha;
-using ascii::alnum;
-using ascii::blank;
-using ascii::char_;
-using ascii::graph;
-using ascii::space;
-using spirit::_1;
-using spirit::_val;
-using spirit::double_;
-using spirit::eoi;
-using spirit::eol;
-using spirit::lexeme;
-using spirit::lit;
-using spirit::omit;
-using spirit::skip;
-
 template <typename Iterator, typename Skipper>
 class config_grammar
     : public qi::grammar<Iterator, parser_proxy(), Skipper>
 {
+    struct error_handler_imp
+    {
+        typedef void result_type;
+
+        Iterator begin;
+
+        explicit error_handler_imp(Iterator b)
+            : begin(b)
+        {
+        }
+
+        void operator()(Iterator first, Iterator last,
+                        Iterator err_pos, const boost::spirit::info &) const
+        {
+            std::ostringstream os;
+            os << "Parsing failed at line " << spirit::get_line(err_pos)
+               << ", near: " << spirit::get_current_line(begin, first, last);
+            throw ConfigError(os.str());
+        }
+    };
+
 public:
-    config_grammar()
-        : config_grammar::base_type(config)
+    config_grammar(Iterator begin)
+        : config_grammar::base_type(config),
+          error_handler(error_handler_imp(begin))
+
     {
         identifier =
             alpha[_val += _1] >> *(char_('.') | alnum)[_val += _1];
 
-        value =
-            +graph[_val += _1] |
-            lexeme['"' >> *(ascii::char_ - '"')[_val += _1] >> '"'];
+        value %=
+            lexeme['"' > *~ascii::char_('"') > '"'] |
+            +(graph - '"');
 
         entry_rule =
-            identifier >> value >> (eol | eoi);
+            identifier > value > (eol | eoi);
 
         section =
-            "[" >> identifier >> "]";
+            "[" > identifier > "]";
 
-        config =
+        config %=
             *(section | skip(blank)[entry_rule]);
+
+        qi::on_error<qi::fail>(value, error_handler(_1, _2, _3, _4));
 
 #ifdef BOOST_SPIRIT_DEBUG
         BOOST_SPIRIT_DEBUG_NODE(identifier);
@@ -116,7 +160,37 @@ public:
     qi::rule<Iterator, parser_proxy(), Skipper> config;
     qi::rule<Iterator, std::string()> identifier, value, section;
     qi::rule<Iterator, pair_type(), ascii::blank_type> entry_rule;
+
+    phoenix::function<error_handler_imp> error_handler;
 };
+
+void parse_config(std::istream & is, const SectionCallback & scal, const ValueCallback & vcal)
+{
+    std::stringstream ss;
+    ss << is.rdbuf();
+    std::string s(ss.str());
+    spirit::line_pos_iterator<decltype(s.cbegin())> begin(s.cbegin()), iter(begin), iter_end(s.cend());
+    typedef decltype(iter) Iter;
+
+    auto skipper(ascii::space | '#' >> *(qi::char_ - qi::eol) >> qi::eol);
+    config_grammar<Iter, decltype(skipper)> pars(begin);
+    parser_proxy t(scal, vcal);
+    try
+    {
+        bool r(qi::phrase_parse(iter, iter_end, pars, skipper, t));
+        if (! r or iter != iter_end)
+        {
+            throw ConfigError("parser failed");
+        }
+    }
+    catch (const spirit::qi::expectation_failure<Iter> & x)
+    {
+        auto range(spirit::get_current_line(begin, x.first, iter_end));
+        std::ostringstream os;
+        os << "Parsing failed at line: " << x.first.position() << ": " << range;
+        throw ConfigError(os.str());
+    }
+}
 
 const double rad2deg(45. / atan(1.));
 
@@ -128,17 +202,30 @@ public:
     angle_grammar()
         : angle_grammar::base_type(start)
     {
-        radians = double_[_val = rad2deg * _1] >> -omit['r'];
-        degrees = double_[_val = _1] >> omit['d'] >>
-            -(double_[_val += _1 / 60.] >> omit['m'] >>
-              -(double_[_val += _1/ 3600.] >> omit['s']));
-        start = (degrees | radians) >> eoi;
+        radians = double_[_val = rad2deg * _1] >> 'r';
+        degrees = double_[_val = _1] >> -('d' >>
+            -(double_[_val += _1 / 60.] >> 'm' >>
+              -(double_[_val += _1/ 3600.] >> 's')));
+        start = degrees | radians;
     }
 
     qi::rule<Iterator, double()> start;
     qi::rule<Iterator, double()> radians;
     qi::rule<Iterator, double()> degrees;
 };
+
+double parse_angle(const std::string & in)
+{
+    angle_grammar<std::string::const_iterator> pars;
+    double ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("angle", in);
+    }
+    return ret;
+}
 
 struct julianepoch_to_juliandate_imp
 {
@@ -214,82 +301,19 @@ public:
         : timestamp_grammar::base_type(start)
     {
         using namespace boost::spirit::qi;
-        start = (double_ >> "JD")[_val = _1]
-            | ("J" >> double_)[_val = julianepoch_to_juliandate(_1)]
+        start = (double_ >> "JD") [_val = _1]
+            | ("J" > double_) [_val = julianepoch_to_juliandate(_1)]
             | (
                 int_ >> ":" >> int_ >> -(":" >> double_) >>
                 -(omit[space] >> int_ >> "-" >> int_ >> "-" >> int_) >>
                 -(omit[space] >> int_)
-                )
-            [_val = parseddate_to_juliandate(_1, _2, _3, _4, _5)]
-            | lit("now")[_val = now_get()]
+                ) [_val = parseddate_to_juliandate(_1, _2, _3, _4, _5)]
+            | lit("now") [_val = now_get()]
             ;
     }
 
     qi::rule<Iterator, double()> start;
 };
-
-#ifdef BOOST_SPIRIT_DEBUG
-    // SPIRIT_DEBUG doesn't work otherwise
-    std::ostream & operator<<(std::ostream & os, const config_variant & v)
-    {
-        using boost::operator<<;
-        os << v;
-        return os;
-    }
-#endif
-
-}
-
-namespace boost { namespace spirit { namespace traits
-{
-
-template <>
-struct push_back_container<parser_proxy, config_variant>
-{
-    static bool call(parser_proxy & t, const config_variant & val)
-    {
-        t.push_back(val);
-        return true;
-    }
-};
-
-}}}
-
-BOOST_FUSION_ADAPT_ADT(
-    parser_proxy,
-    (const config_variant &, const config_variant &, obj.get(), obj.push_back(val))
-)
-
-namespace config_parser
-{
-
-void parse_config(std::istream & os, const Callback & callback)
-{
-    std::stringstream ss;
-    ss << os.rdbuf();
-    std::string s(ss.str());
-    std::cout << s << "\n===\n";
-    std::string::const_iterator iter(s.cbegin()), iter_end(s.cend());
-
-    auto skipper(ascii::space | '#' >> *(qi::char_ - qi::eol) >> qi::eol);
-    config_grammar<std::string::const_iterator, decltype(skipper)> pars;
-    parser_proxy t(callback);
-    std::cout << phrase_parse(iter, iter_end, pars, skipper, t) << std::endl;
-}
-
-double parse_angle(const std::string & in)
-{
-    angle_grammar<std::string::const_iterator> pars;
-    double ret;
-    auto begin(in.cbegin()), end(in.cend());
-    bool r(parse(begin, end, pars, ret));
-    if (!r or begin != end)
-    {
-        throw ConfigValueError("angle", in);
-    }
-    return ret;
-}
 
 double parse_timestamp(const std::string & in)
 {
@@ -304,4 +328,64 @@ double parse_timestamp(const std::string & in)
     return ret;
 }
 
+template <typename Iterator>
+class size_grammar
+        : public qi::grammar<Iterator, double()>
+{
+public:
+    size_grammar()
+        : size_grammar::base_type(start)
+    {
+        using namespace boost::spirit::qi;
+        start %= (double_ >> -lit("mm"));
+    }
+
+    qi::rule<Iterator, double()> start;
+};
+
+double parse_size(const std::string & in)
+{
+    size_grammar<std::string::const_iterator> pars;
+    double ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("size", in);
+    }
+    return ret;
 }
+
+}
+
+BOOST_FUSION_ADAPT_ADT(
+    config_parser::parser_proxy,
+    (const config_variant &, const config_variant &, obj.get(), obj.push_back(val))
+)
+
+namespace boost { namespace spirit { namespace traits
+{
+
+template <>
+struct push_back_container<config_parser::parser_proxy, config_variant>
+{
+    static bool call(config_parser::parser_proxy & t, const config_variant & val)
+    {
+        t.push_back(val);
+        return true;
+    }
+};
+
+#ifdef BOOST_SPIRIT_DEBUG
+    // SPIRIT_DEBUG doesn't work otherwise
+
+    std::ostream & operator<<(std::ostream & os, const config_variant & v)
+    {
+        using boost::operator<<;
+        os << v;
+        return os;
+    }
+
+#endif
+
+}}}

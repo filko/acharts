@@ -6,11 +6,13 @@
 namespace config_parser
 {
 
-typedef std::function<void (const std::string &, const std::string &)> Callback;
+typedef std::function<void (const std::string &, const std::string &)> ValueCallback;
+typedef std::function<void (const std::string &)> SectionCallback;
 
-void parse_config(std::istream & os, const Callback & callback);
+void parse_config(std::istream & os, const SectionCallback & scal, const ValueCallback & vcal);
 double parse_angle(const std::string & in);
 double parse_timestamp(const std::string & in);
+double parse_size(const std::string & in);
 
 }
 
