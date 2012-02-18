@@ -47,7 +47,8 @@ protected:
 class ProjectionFactory
 {
 public:
-    static std::shared_ptr<Projection> create(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+    static std::shared_ptr<Projection> create(const std::string & type,
+                                              const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
                                               const ln_equ_posn & center);
 };
 

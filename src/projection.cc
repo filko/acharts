@@ -1,9 +1,12 @@
 #include "projection.hh"
 
+#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <iostream>
 #include <libnova/utility.h>
 #include <stdexcept>
+
+#include "exceptions.hh"
 
 SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
     : ra(ln_deg_to_rad(rh.ra)),
@@ -61,8 +64,14 @@ public:
     }
 };
 
-std::shared_ptr<Projection> ProjectionFactory::create(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+std::shared_ptr<Projection> ProjectionFactory::create(const std::string & type,
+                                                      const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
                                                       const ln_equ_posn & center)
 {
-    return std::make_shared<AzimuthalEquidistantProjection>(canvas, apparent_canvas, center);
+    std::string t(boost::algorithm::to_lower_copy(type));
+
+    if ("azimuthalequidistant" == t)
+        return std::make_shared<AzimuthalEquidistantProjection>(canvas, apparent_canvas, center);
+
+    throw ConfigError("Unknown projection specified: " + type);
 }
