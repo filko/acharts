@@ -112,10 +112,11 @@ struct Config::Implementation
         add("canvas.dimensions.y", size{210.});
 
         add("projection.type", "AzimuthalEquidistant");
-        add("projection.dimensions.x", angle{45.});
-        add("projection.dimensions.y", angle{0.});
-        add("projection.centre.x", angle{0.});
-        add("projection.centre.y", angle{0.});
+
+        add("projection.dimensions.ra", angle{45.});
+        add("projection.dimensions.dec", angle{0.});
+        add("projection.centre.ra", angle{0.});
+        add("projection.centre.dec", angle{0.});
     }
 
     void accept_value(const std::string & path, const std::string & value)
