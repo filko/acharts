@@ -244,7 +244,7 @@ struct parseddate_to_juliandate_imp
 
     double operator()(int h, int m, boost::optional<double> s,
                       boost::optional<boost::fusion::vector3<int, int, int>> date,
-                      boost::optional<int> tz) const
+                      boost::optional<double> tz) const
     {
         ln_zonedate zdate;
 
@@ -306,7 +306,7 @@ public:
             | (
                 int_ >> ":" >> int_ >> -(":" >> double_) >>
                 -(omit[space] >> int_ >> "-" >> int_ >> "-" >> int_) >>
-                -(omit[space] >> int_)
+                -(omit[space] >> double_)
                 ) [_val = parseddate_to_juliandate(_1, _2, _3, _4, _5)]
             | lit("now") [_val = now_get()]
             ;
