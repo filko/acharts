@@ -79,7 +79,6 @@ Catalogue::Catalogue()
 
 Catalogue::~Catalogue()
 {
-    delete imp_;
 }
 
 void Catalogue::load()

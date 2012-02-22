@@ -224,7 +224,6 @@ Config::Config(int arc, char * arv[])
 
 Config::~Config()
 {
-    delete imp_;
 }
 
 std::pair<double, double> Config::location() const

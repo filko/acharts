@@ -1,6 +1,7 @@
 #ifndef CHART_CATALOGUE_HH
 #define CHART_CATALOGUE_HH 1
 
+#include <memory>
 #include <string>
 
 class Star;
@@ -33,7 +34,7 @@ private:
 class Catalogue
 {
     struct Implementation;
-    Implementation * imp_;
+    std::unique_ptr<Implementation> imp_;
 
     friend class ConstStarIterator;
 

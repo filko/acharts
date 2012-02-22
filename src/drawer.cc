@@ -121,13 +121,13 @@ struct svg_text
 
 }
 
-struct Drawer::Impl
+struct Drawer::Implementation
 {
     std::shared_ptr<Projection> projection_;
     const OutputCoord canvas_, canvas_start_;
     std::deque<std::shared_ptr<svg_shape>> shapes_;
 
-    Impl(const OutputCoord & canvas, const OutputCoord & scanvas)
+    Implementation(const OutputCoord & canvas, const OutputCoord & scanvas)
         : canvas_(canvas), canvas_start_(scanvas)
     {
     }
@@ -140,7 +140,7 @@ struct Drawer::Impl
 };
 
 Drawer::Drawer(const OutputCoord & canvas)
-    : imp_(new Impl(canvas, OutputCoord(- canvas.x / 2., - canvas.y / 2.)))
+    : imp_(new Implementation(canvas, OutputCoord(- canvas.x / 2., - canvas.y / 2.)))
 {
     std::string background_color("white");
     imp_->shapes_.push_back(
@@ -150,7 +150,6 @@ Drawer::Drawer(const OutputCoord & canvas)
 
 Drawer::~Drawer()
 {
-    delete imp_;
 }
 
 void Drawer::set_projection(const std::shared_ptr<Projection> & projection)

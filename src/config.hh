@@ -40,7 +40,7 @@ inline bool operator!=(const ConstCatalogueIterator & lhs, const ConstCatalogueI
 class Config
 {
     struct Implementation;
-    Implementation * imp_;
+    std::unique_ptr<Implementation> imp_;
 
     friend class ConstCatalogueIterator;
 public:

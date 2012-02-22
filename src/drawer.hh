@@ -1,13 +1,16 @@
 #ifndef GRAPH_DRAWER_HH
 #define GRAPH_DRAWER_HH 1
 
+#include <memory>
+
 #include "stars.hh"
 #include "projection.hh"
 
 class Drawer
 {
-    struct Impl;
-    Impl * imp_;
+    struct Implementation;
+    std::unique_ptr<Implementation> imp_;
+
 public:
     explicit Drawer(const OutputCoord & canvas);
     ~Drawer();
