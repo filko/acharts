@@ -329,12 +329,12 @@ double parse_timestamp(const std::string & in)
 }
 
 template <typename Iterator>
-class size_grammar
+class length_grammar
         : public qi::grammar<Iterator, double()>
 {
 public:
-    size_grammar()
-        : size_grammar::base_type(start)
+    length_grammar()
+        : length_grammar::base_type(start)
     {
         using namespace boost::spirit::qi;
         start %= (double_ >> -lit("mm"));
@@ -343,15 +343,15 @@ public:
     qi::rule<Iterator, double()> start;
 };
 
-double parse_size(const std::string & in)
+double parse_length(const std::string & in)
 {
-    size_grammar<std::string::const_iterator> pars;
+    length_grammar<std::string::const_iterator> pars;
     double ret;
     auto begin(in.cbegin()), end(in.cend());
     bool r(parse(begin, end, pars, ret));
     if (!r or begin != end)
     {
-        throw ConfigValueError("size", in);
+        throw ConfigValueError("length", in);
     }
     return ret;
 }

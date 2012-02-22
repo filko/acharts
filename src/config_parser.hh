@@ -12,7 +12,7 @@ typedef std::function<void (const std::string &)> SectionCallback;
 void parse_config(std::istream & os, const SectionCallback & scal, const ValueCallback & vcal);
 double parse_angle(const std::string & in);
 double parse_timestamp(const std::string & in);
-double parse_size(const std::string & in);
+double parse_length(const std::string & in);
 
 }
 

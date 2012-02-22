@@ -33,14 +33,14 @@ std::ostream & operator<<(std::ostream & os, const timestamp & t)
     return os;
 }
 
-struct size
+struct length
 {
     double val;
 };
 
-std::ostream & operator<<(std::ostream & os, const size & s)
+std::ostream & operator<<(std::ostream & os, const length & s)
 {
-    os << "Size: " << s.val << " mm";
+    os << "Length: " << s.val << " mm";
     return os;
 }
 
@@ -50,7 +50,7 @@ std::ostream & operator<<(std::ostream & os, empty_type)
     return os;
 }
 
-typedef boost::variant<empty_type, angle, timestamp, size, std::string> Option;
+typedef boost::variant<empty_type, angle, timestamp, length, std::string> Option;
 
 namespace
 {
@@ -78,9 +78,9 @@ struct value_parser_visitor
         s = value_;
     }
 
-    void operator()(size & s) const
+    void operator()(length & s) const
     {
-        s.val = config_parser::parse_size(value_);
+        s.val = config_parser::parse_length(value_);
     }
 
     void operator()(empty_type) const
@@ -108,8 +108,8 @@ struct Config::Implementation
 
         add("catalogue.path", "");
 
-        add("canvas.dimensions.x", size{297.});
-        add("canvas.dimensions.y", size{210.});
+        add("canvas.dimensions.x", length{297.});
+        add("canvas.dimensions.y", length{210.});
 
         add("projection.type", "AzimuthalEquidistant");
 
@@ -235,8 +235,8 @@ std::pair<double, double> Config::location() const
 
 const OutputCoord Config::canvas_dimensions() const
 {
-    return OutputCoord(imp_->get<size>("canvas.dimensions.x").val,
-                       imp_->get<size>("canvas.dimensions.y").val);
+    return OutputCoord(imp_->get<length>("canvas.dimensions.x").val,
+                       imp_->get<length>("canvas.dimensions.y").val);
 }
 
 const std::string Config::projection_type() const
@@ -246,14 +246,14 @@ const std::string Config::projection_type() const
 
 const ln_equ_posn Config::projection_centre() const
 {
-    return ln_equ_posn{imp_->get<angle>("projection.centre.x").val,
-                       imp_->get<angle>("projection.centre.y").val};
+    return ln_equ_posn{imp_->get<angle>("projection.centre.dec").val,
+                       imp_->get<angle>("projection.centre.ra").val};
 }
 
 const ln_equ_posn Config::projection_dimensions() const
 {
-    return ln_equ_posn{imp_->get<angle>("projection.dimensions.x").val,
-                       imp_->get<angle>("projection.dimensions.y").val};
+    return ln_equ_posn{imp_->get<angle>("projection.dimensions.dec").val,
+                       imp_->get<angle>("projection.dimensions.ra").val};
 }
 
 const ConstCatalogueIterator Config::begin_catalogues() const
