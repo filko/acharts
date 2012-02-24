@@ -3,7 +3,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 project(Charts)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c++0x")
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic -std=c++0x ${CMAKE_CXX_FLAGS}")
 
 find_package(Asciidoc REQUIRED)
 if(NOT ASCIIDOC_EXECUTABLE)
