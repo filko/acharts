@@ -286,8 +286,7 @@ struct now_get_imp
 
     double operator()() const
     {
-        auto d(Now::get());
-        return ln_get_julian_day(&d);
+        return Now::get_jd();
     }
 };
 phoenix::function<now_get_imp> now_get;

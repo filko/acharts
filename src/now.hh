@@ -16,6 +16,7 @@ private:
 
 public:
     static const ln_date get();
+    static double get_jd();
 };
 
 #endif
