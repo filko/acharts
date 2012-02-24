@@ -356,6 +356,34 @@ double parse_length(const std::string & in)
     return ret;
 }
 
+template <typename Iterator>
+class boolean_grammar
+        : public qi::grammar<Iterator, bool()>
+{
+public:
+    boolean_grammar()
+        : boolean_grammar::base_type(start)
+    {
+        using namespace boost::spirit::qi;
+        start = lit("on")[_val = true] | lit("off")[_val = false];
+    }
+
+    qi::rule<Iterator, bool()> start;
+};
+
+bool parse_boolean(const std::string & in)
+{
+    boolean_grammar<std::string::const_iterator> pars;
+    bool ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("boolean", in);
+    }
+    return ret;
+}
+
 }
 
 BOOST_FUSION_ADAPT_ADT(

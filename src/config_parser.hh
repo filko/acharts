@@ -13,6 +13,7 @@ void parse_config(std::istream & os, const SectionCallback & scal, const ValueCa
 double parse_angle(const std::string & in);
 double parse_timestamp(const std::string & in);
 double parse_length(const std::string & in);
+bool parse_boolean(const std::string & in);
 
 }
 
