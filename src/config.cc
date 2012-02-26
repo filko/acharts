@@ -8,6 +8,7 @@
 #include "catalogue.hh"
 #include "config_parser.hh"
 #include "exceptions.hh"
+#include "now.hh"
 
 struct angle
 {
@@ -105,6 +106,8 @@ struct Config::Implementation
 
         add("core.location.latitude", angle{0.});
         add("core.location.longitude", angle{0.});
+
+        add("core.t", timestamp{Now::get_jd()});
 
         add("catalogue.path", "");
 
@@ -253,6 +256,11 @@ const ln_equ_posn Config::projection_dimensions() const
 {
     return ln_equ_posn{imp_->get<angle>("projection.dimensions.ra").val,
                        imp_->get<angle>("projection.dimensions.dec").val};
+}
+
+double Config::t() const
+{
+    return imp_->get<timestamp>("core.t").val;
 }
 
 const ConstCatalogueIterator Config::begin_catalogues() const
