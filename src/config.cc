@@ -45,13 +45,24 @@ std::ostream & operator<<(std::ostream & os, const length & s)
     return os;
 }
 
+struct boolean
+{
+    bool val;
+};
+
+std::ostream & operator<<(std::ostream & os, const boolean & b)
+{
+    os << (b.val ? "on" : "off");
+    return os;
+}
+
 struct empty_type {};
 std::ostream & operator<<(std::ostream & os, empty_type)
 {
     return os;
 }
 
-typedef boost::variant<empty_type, angle, timestamp, length, std::string> Option;
+typedef boost::variant<empty_type, angle, timestamp, length, boolean, std::string> Option;
 
 namespace
 {
@@ -82,6 +93,11 @@ struct value_parser_visitor
     void operator()(length & s) const
     {
         s.val = config_parser::parse_length(value_);
+    }
+
+    void operator()(boolean & b) const
+    {
+        b.val = config_parser::parse_boolean(value_);
     }
 
     void operator()(empty_type) const
