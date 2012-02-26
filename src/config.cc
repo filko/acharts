@@ -134,6 +134,8 @@ struct Config::Implementation
         add("canvas.dimensions.x", length{297.});
         add("canvas.dimensions.y", length{210.});
 
+        add("moon.enable", boolean{false});
+
         add("projection.type", "AzimuthalEquidistant");
 
         add("projection.dimensions.ra", angle{45.});
@@ -143,6 +145,8 @@ struct Config::Implementation
 
         add("planets.enable", "");
         add("planets.labels", boolean{true});
+
+        add("sun.enable", boolean{false});
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -262,6 +266,16 @@ const OutputCoord Config::canvas_dimensions() const
 {
     return OutputCoord(imp_->get<length>("canvas.dimensions.x").val,
                        imp_->get<length>("canvas.dimensions.y").val);
+}
+
+bool Config::moon() const
+{
+    return imp_->get<boolean>("moon.enable").val;
+}
+
+bool Config::sun() const
+{
+    return imp_->get<boolean>("sun.enable").val;
 }
 
 const std::string Config::projection_type() const

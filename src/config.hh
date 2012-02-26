@@ -60,6 +60,9 @@ public:
 
     const std::vector<std::string> planets() const;
     bool planets_labels() const;
+
+    bool moon() const;
+    bool sun() const;
 };
 
 #endif
