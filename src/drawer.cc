@@ -137,6 +137,12 @@ struct Drawer::Implementation
         return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
             oc.x <= canvas_.x && oc.x <= canvas_.y;
     }
+
+    double mag2size(double mag)
+    {
+        static const double e(exp(1));
+        return exp(-mag / e);
+    }
 };
 
 Drawer::Drawer(const OutputCoord & canvas)
@@ -181,13 +187,12 @@ void Drawer::draw(const Star & star)
 {
     static std::string black("black");
     static std::string white("white");
-    static const double e(exp(1));
 
-    double s(2. * exp(-star.vmag_ / e));
     OutputCoord coord(imp_->projection_->project(star.pos_));
     if (! imp_->in_canvas(coord))
         return;
 
+    double s(imp_->mag2size(star.vmag_));
     auto c(std::make_shared<svg_circle>(coord, s, black, .5 * s, white));
     imp_->shapes_.push_back(c);
 
@@ -207,4 +212,19 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
 void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
 {
     imp_->shapes_.push_back(std::make_shared<svg_text>(body, imp_->projection_->project(pos), 4.));
+}
+
+void Drawer::draw(const Planet & planet, double jd, bool label)
+{
+    auto pos(planet.get_equ_coords(jd));
+    auto coord(imp_->projection_->project(pos));
+    double s(imp_->mag2size(planet.get_magnitude(jd)));
+    imp_->shapes_.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
+
+    if (label)
+    {
+        coord.x += s;
+        coord.y += 1.;
+        imp_->shapes_.push_back(std::make_shared<svg_text>(planet.name(), coord, 4.));
+    }
 }

@@ -5,6 +5,7 @@
 
 #include "stars.hh"
 #include "projection.hh"
+#include "planet.hh"
 
 class Drawer
 {
@@ -20,6 +21,7 @@ public:
     void store(const char * filename) const;
 
     void draw(const Star & star);
+    void draw(const Planet & planet, double JD, bool label = false);
     void draw(const std::vector<ln_equ_posn> & path);
     void draw(const std::string & body, const ln_equ_posn & pos);
 };

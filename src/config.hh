@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "catalogue.hh"
 #include "projection.hh"
@@ -56,6 +57,9 @@ public:
 
     const ConstCatalogueIterator begin_catalogues() const;
     const ConstCatalogueIterator end_catalogues() const;
+
+    const std::vector<std::string> planets() const;
+    bool planets_labels() const;
 };
 
 #endif

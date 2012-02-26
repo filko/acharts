@@ -1,5 +1,9 @@
 #include "config.hh"
 
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/variant.hpp>
 #include <deque>
@@ -136,6 +140,9 @@ struct Config::Implementation
         add("projection.dimensions.dec", angle{0.});
         add("projection.centre.ra", angle{0.});
         add("projection.centre.dec", angle{0.});
+
+        add("planets.enable", "");
+        add("planets.labels", boolean{true});
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -277,6 +284,34 @@ const ln_equ_posn Config::projection_dimensions() const
 double Config::t() const
 {
     return imp_->get<timestamp>("core.t").val;
+}
+
+const std::vector<std::string> Config::planets() const
+{
+    std::string v(imp_->get<std::string>("planets.enable"));
+    if ("all" == v)
+        v = "Mercury,Venus,Mars,Jupiter,Saturn,Uranus,Neptune,Pluto";
+
+    std::vector<std::string> ret;
+    boost::algorithm::split(ret, v, boost::algorithm::is_any_of(","), boost::algorithm::token_compress_on);
+
+    for (auto i(ret.begin()); i != ret.end(); )
+    {
+        if (i->empty())
+            i = ret.erase(i);
+        else
+        {
+            boost::algorithm::trim(*i);
+            boost::algorithm::to_lower(*i);
+            ++i;
+        }
+    }
+    return ret;
+}
+
+bool Config::planets_labels() const
+{
+    return imp_->get<boolean>("planets.labels").val;
 }
 
 const ConstCatalogueIterator Config::begin_catalogues() const

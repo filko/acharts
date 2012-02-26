@@ -5,6 +5,7 @@ add_executable(charts
   drawer.cc
   main.cc
   now.cc
+  planet.cc
   projection.cc
   stars.cc
 )
