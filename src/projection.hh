@@ -36,7 +36,8 @@ protected:
 
 public:
     virtual ~Projection();
-    virtual OutputCoord project(const ln_equ_posn & pos) = 0;
+    virtual OutputCoord project(const ln_equ_posn & pos) const = 0;
+    virtual double scale_at_point(const ln_equ_posn & pos) const;
 
 protected:
     OutputCoord canvas_;

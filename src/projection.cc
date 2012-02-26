@@ -34,6 +34,14 @@ Projection::~Projection()
 {
 }
 
+double Projection::scale_at_point(const ln_equ_posn & pos) const
+{
+    ln_equ_posn p2(pos);
+    p2.ra += 0.1;
+    OutputCoord o1(this->project(pos)), o2(this->project(p2));
+    return (o1.x - o2.x) * 10.;
+}
+
 class AzimuthalEquidistantProjection
     : public Projection
 {
@@ -44,7 +52,7 @@ public:
     {
     }
 
-    virtual OutputCoord project(const ln_equ_posn & pos)
+    virtual OutputCoord project(const ln_equ_posn & pos) const
     {
         double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
         double cosc(sin(center_.dec) * sin(dec) + cos(center_.dec) * cos(dec) * cos(ra - center_.ra));
