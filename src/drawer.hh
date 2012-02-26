@@ -5,7 +5,7 @@
 
 #include "stars.hh"
 #include "projection.hh"
-#include "planet.hh"
+#include "solar_object.hh"
 
 class Drawer
 {
@@ -13,6 +13,12 @@ class Drawer
     std::unique_ptr<Implementation> imp_;
 
 public:
+    enum object_rendering_type
+    {
+        magnitudo,
+        sdiam
+    };
+
     explicit Drawer(const OutputCoord & canvas);
     ~Drawer();
 
@@ -21,7 +27,7 @@ public:
     void store(const char * filename) const;
 
     void draw(const Star & star);
-    void draw(const Planet & planet, double JD, bool label = false);
+    void draw(const SolarObject & object, double JD, object_rendering_type type = magnitudo, bool label = false);
     void draw(const std::vector<ln_equ_posn> & path);
     void draw(const std::string & body, const ln_equ_posn & pos);
 };

@@ -143,6 +143,20 @@ struct Drawer::Implementation
         static const double e(exp(1));
         return exp(-mag / e);
     }
+
+    double draw_by_magnitudo(const SolarObject & object, double jd, const OutputCoord & coord)
+    {
+        double s(mag2size(object.get_magnitude(jd)));
+        shapes_.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
+        return s;
+    }
+
+    double draw_by_sdiam(const SolarObject & object, double jd, const OutputCoord & coord, const ln_equ_posn & pos)
+    {
+        double s(object.get_sdiam(jd) * projection_->scale_at_point(pos) / 3600.);
+        shapes_.push_back(std::make_shared<svg_circle>(coord, s, "#22222", 0., ""));
+        return s;
+    }
 };
 
 Drawer::Drawer(const OutputCoord & canvas)
@@ -214,17 +228,26 @@ void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
     imp_->shapes_.push_back(std::make_shared<svg_text>(body, imp_->projection_->project(pos), 4.));
 }
 
-void Drawer::draw(const Planet & planet, double jd, bool label)
+void Drawer::draw(const SolarObject & object, double jd, object_rendering_type type, bool label)
 {
-    auto pos(planet.get_equ_coords(jd));
+    auto pos(object.get_equ_coords(jd));
     auto coord(imp_->projection_->project(pos));
-    double s(imp_->mag2size(planet.get_magnitude(jd)));
-    imp_->shapes_.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
+
+    double s(0.);
+    switch (type)
+    {
+        case magnitudo:
+            s = imp_->draw_by_magnitudo(object, jd, coord);
+            break;
+        case sdiam:
+            s = imp_->draw_by_sdiam(object, jd, coord, pos);
+            break;
+    }
 
     if (label)
     {
         coord.x += s;
         coord.y += 1.;
-        imp_->shapes_.push_back(std::make_shared<svg_text>(planet.name(), coord, 4.));
+        imp_->shapes_.push_back(std::make_shared<svg_text>(object.name(), coord, 4.));
     }
 }

@@ -4,6 +4,7 @@ add_executable(charts
   config_parser_i_hate_boost.cc
   drawer.cc
   main.cc
+  moon_and_sun.cc
   now.cc
   planet.cc
   projection.cc
