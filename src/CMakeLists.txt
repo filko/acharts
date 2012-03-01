@@ -1,4 +1,5 @@
 add_executable(charts
+  bezier.cc
   catalogue.cc
   config.cc
   config_parser_i_hate_boost.cc

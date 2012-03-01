@@ -49,7 +49,7 @@ public:
     ~Config();
 
     std::pair<double, double> location() const;
-    const OutputCoord canvas_dimensions() const;
+    const CanvasPoint canvas_dimensions() const;
     const std::string projection_type() const;
     const ln_equ_posn projection_centre() const;
     const ln_equ_posn projection_dimensions() const;

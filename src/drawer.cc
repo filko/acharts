@@ -6,6 +6,8 @@
 #include <fstream>
 #include <stdexcept>
 
+#include "bezier.hh"
+
 namespace
 {
 
@@ -30,13 +32,13 @@ struct svg_shape
 struct svg_circle
     : public svg_shape
 {
-    OutputCoord pos;
+    CanvasPoint pos;
     double radius;
     std::string fill;
     double stroke_width;
     std::string stroke;
 
-    svg_circle(const OutputCoord & pos, double radius, const std::string & fill,
+    svg_circle(const CanvasPoint & pos, double radius, const std::string & fill,
                double stroke_width, const std::string & stroke)
         : pos(pos), radius(radius), fill(fill),
           stroke_width(stroke_width), stroke(stroke)
@@ -53,10 +55,10 @@ struct svg_circle
 struct svg_rect
     : public svg_shape
 {
-    OutputCoord start, size;
+    CanvasPoint start, size;
     std::string fill;
 
-    svg_rect(const OutputCoord & start, const OutputCoord & size, const std::string & fill)
+    svg_rect(const CanvasPoint & start, const CanvasPoint & size, const std::string & fill)
         : start(start), size(size), fill(fill)
     {
     }
@@ -71,32 +73,40 @@ struct svg_rect
 struct svg_cbezier
     : public svg_shape
 {
-    std::vector<OutputCoord> path;
+    std::vector<CanvasPoint> path;
     std::string stroke;
     double width;
 
-    svg_cbezier(std::vector<OutputCoord> && path, const std::string & stroke, double width)
+    svg_cbezier(std::vector<CanvasPoint> && path, const std::string & stroke, double width)
         : path(std::move(path)), stroke(stroke), width(width)
     {
     }
 
     virtual void flush(std::ostream & out)
     {
-        if (! path.empty())
+        auto beziered(interpolate_bezier(path));
+/*
+        // drawing ugly control points, usefull for debugging
+        for (auto i(beziered.cbegin()), i_end(beziered.cend());
+             i != i_end; ++i)
         {
-            out << "<path fill='none' stroke='" << stroke << "' stroke-width='" << width << "' "
-                "d='M";
-            auto i(path.begin()), i_end(path.end());
-            out << i->x << ',' << i->y << ' ';
-            ++i;
-            while (i != i_end)
-            {
-                out << "L" << i->x << ',' << i->y << ' ';
-                ++i;
-            }
-
-            out << "' />\n";
+            out << "<circle cx='" << i->p.x << "' cy='" << i->p.y << "' r='2px' fill='black' />\n";
+            out << "<circle cx='" << i->cm.x << "' cy='" << i->cm.y << "' r='1px' fill='blue' />\n";
+            out << "<circle cx='" << i->cp.x << "' cy='" << i->cp.y << "' r='1px' fill='green' />\n";
         }
+*/
+
+        out << "<path stroke='gray' stroke-width='" << width << "' fill='none'\n  d='";
+        auto prev(beziered.cbegin());
+        out << 'M' << prev->p.x << ',' << prev->p.y << ' ';
+        for (auto next(prev + 1), i_end(beziered.cend());
+             next != i_end; prev = next, ++next)
+        {
+            out << 'C' << prev->cp.x << ',' << prev->cp.y << ' '
+                << next->cm.x << ',' << next->cm.y << ' '
+                << next->p.x << ',' << next->p.y << ' ';
+        }
+        out << "' />\n";
     }
 };
 
@@ -104,10 +114,10 @@ struct svg_text
     : public svg_shape
 {
     std::string body;
-    OutputCoord pos;
+    CanvasPoint pos;
     double size;
 
-    svg_text(const std::string & body, const OutputCoord & pos, double size)
+    svg_text(const std::string & body, const CanvasPoint & pos, double size)
         : body(body), pos(pos), size(size)
     {
     }
@@ -124,15 +134,15 @@ struct svg_text
 struct Drawer::Implementation
 {
     std::shared_ptr<Projection> projection_;
-    const OutputCoord canvas_, canvas_start_;
+    const CanvasPoint canvas_, canvas_start_;
     std::deque<std::shared_ptr<svg_shape>> shapes_;
 
-    Implementation(const OutputCoord & canvas, const OutputCoord & scanvas)
+    Implementation(const CanvasPoint & canvas, const CanvasPoint & scanvas)
         : canvas_(canvas), canvas_start_(scanvas)
     {
     }
 
-    bool in_canvas(const OutputCoord & oc)
+    bool in_canvas(const CanvasPoint & oc)
     {
         return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
             oc.x <= canvas_.x && oc.x <= canvas_.y;
@@ -144,14 +154,14 @@ struct Drawer::Implementation
         return exp(-mag / e);
     }
 
-    double draw_by_magnitudo(const SolarObject & object, double jd, const OutputCoord & coord)
+    double draw_by_magnitudo(const SolarObject & object, double jd, const CanvasPoint & coord)
     {
         double s(mag2size(object.get_magnitude(jd)));
         shapes_.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
         return s;
     }
 
-    double draw_by_sdiam(const SolarObject & object, double jd, const OutputCoord & coord, const ln_equ_posn & pos)
+    double draw_by_sdiam(const SolarObject & object, double jd, const CanvasPoint & coord, const ln_equ_posn & pos)
     {
         double s(object.get_sdiam(jd) * projection_->scale_at_point(pos) / 3600.);
         shapes_.push_back(std::make_shared<svg_circle>(coord, s, "#22222", 0., ""));
@@ -159,13 +169,13 @@ struct Drawer::Implementation
     }
 };
 
-Drawer::Drawer(const OutputCoord & canvas)
-    : imp_(new Implementation(canvas, OutputCoord(- canvas.x / 2., - canvas.y / 2.)))
+Drawer::Drawer(const CanvasPoint & canvas)
+    : imp_(new Implementation(canvas, CanvasPoint(- canvas.x / 2., - canvas.y / 2.)))
 {
     std::string background_color("white");
     imp_->shapes_.push_back(
-        std::make_shared<svg_rect>(OutputCoord(imp_->canvas_start_.x, imp_->canvas_start_.y),
-                                   OutputCoord(imp_->canvas_.x, imp_->canvas_.y), background_color));
+        std::make_shared<svg_rect>(CanvasPoint(imp_->canvas_start_.x, imp_->canvas_start_.y),
+                                   CanvasPoint(imp_->canvas_.x, imp_->canvas_.y), background_color));
 }
 
 Drawer::~Drawer()
@@ -202,7 +212,7 @@ void Drawer::draw(const Star & star)
     static std::string black("black");
     static std::string white("white");
 
-    OutputCoord coord(imp_->projection_->project(star.pos_));
+    CanvasPoint coord(imp_->projection_->project(star.pos_));
     if (! imp_->in_canvas(coord))
         return;
 
@@ -216,7 +226,7 @@ void Drawer::draw(const Star & star)
 
 void Drawer::draw(const std::vector<ln_equ_posn> & path)
 {
-    std::vector<OutputCoord> ret;
+    std::vector<CanvasPoint> ret;
     for (auto i(path.begin()), i_end(path.end());
          i != i_end; ++i)
         ret.push_back(imp_->projection_->project(*i));

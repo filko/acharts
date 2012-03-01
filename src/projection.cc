@@ -14,7 +14,7 @@ SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
 {
 }
 
-Projection::Projection(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
+Projection::Projection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
     : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center)
 {
     if (0. == apparent_canvas_.ra)
@@ -38,7 +38,7 @@ double Projection::scale_at_point(const ln_equ_posn & pos) const
 {
     ln_equ_posn p2(pos);
     p2.ra += 0.1;
-    OutputCoord o1(this->project(pos)), o2(this->project(p2));
+    CanvasPoint o1(this->project(pos)), o2(this->project(p2));
     return (o1.x - o2.x) * 10.;
 }
 
@@ -46,13 +46,13 @@ class AzimuthalEquidistantProjection
     : public Projection
 {
 public:
-    AzimuthalEquidistantProjection(const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+    AzimuthalEquidistantProjection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas,
                                    const ln_equ_posn & center)
         : Projection(canvas, apparent_canvas, center)
     {
     }
 
-    virtual OutputCoord project(const ln_equ_posn & pos) const
+    virtual CanvasPoint project(const ln_equ_posn & pos) const
     {
         double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
         double cosc(sin(center_.dec) * sin(dec) + cos(center_.dec) * cos(dec) * cos(ra - center_.ra));
@@ -67,13 +67,13 @@ public:
 
         // negate x, because for svg up is down
         // negate y, because right ascention is going left to right
-        return OutputCoord(-x * canvas_.x / apparent_canvas_.ra,
+        return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
                            -y * canvas_.y / apparent_canvas_.dec);
     }
 };
 
 std::shared_ptr<Projection> ProjectionFactory::create(const std::string & type,
-                                                      const OutputCoord & canvas, const ln_equ_posn & apparent_canvas,
+                                                      const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas,
                                                       const ln_equ_posn & center)
 {
     std::string t(boost::algorithm::to_lower_copy(type));

@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "canvas.hh"
 #include "stars.hh"
 #include "projection.hh"
 #include "solar_object.hh"
@@ -19,7 +20,7 @@ public:
         sdiam
     };
 
-    explicit Drawer(const OutputCoord & canvas);
+    explicit Drawer(const CanvasPoint & canvas);
     ~Drawer();
 
     void set_projection(const std::shared_ptr<Projection> & proj);

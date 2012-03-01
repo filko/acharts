@@ -262,9 +262,9 @@ std::pair<double, double> Config::location() const
                           imp_->get<angle>("core.location.longitude").val);
 }
 
-const OutputCoord Config::canvas_dimensions() const
+const CanvasPoint Config::canvas_dimensions() const
 {
-    return OutputCoord(imp_->get<length>("canvas.dimensions.x").val,
+    return CanvasPoint(imp_->get<length>("canvas.dimensions.x").val,
                        imp_->get<length>("canvas.dimensions.y").val);
 }
 
