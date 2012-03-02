@@ -131,7 +131,7 @@ public:
 
     {
         identifier =
-            alpha[_val += _1] >> *(char_('.') | alnum)[_val += _1];
+            alpha[_val += _1] >> *(char_(".-") | alnum)[_val += _1];
 
         value %=
             lexeme['"' > *~ascii::char_('"') > '"'] |
