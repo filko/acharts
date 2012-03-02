@@ -134,18 +134,22 @@ struct svg_text
 struct Drawer::Implementation
 {
     std::shared_ptr<Projection> projection_;
-    const CanvasPoint canvas_, canvas_start_;
+    double canvas_margin_;
+    const CanvasPoint canvas_, canvas_start_, canvas_end_;
     std::deque<std::shared_ptr<svg_shape>> shapes_;
 
-    Implementation(const CanvasPoint & canvas, const CanvasPoint & scanvas)
-        : canvas_(canvas), canvas_start_(scanvas)
+    Implementation(const CanvasPoint & canvas, double canvas_margin)
+        : canvas_margin_(canvas_margin),
+          canvas_(canvas),
+          canvas_start_(-canvas.x / 2. - canvas_margin_, -canvas.y / 2. - canvas_margin_),
+          canvas_end_(canvas.x / 2. + canvas_margin_, canvas_.y / 2. + canvas_margin_)
     {
     }
 
     bool in_canvas(const CanvasPoint & oc)
     {
         return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
-            oc.x <= canvas_.x && oc.x <= canvas_.y;
+            oc.x <= canvas_end_.x && oc.y <= canvas_end_.y;
     }
 
     double mag2size(double mag)
@@ -169,12 +173,12 @@ struct Drawer::Implementation
     }
 };
 
-Drawer::Drawer(const CanvasPoint & canvas)
-    : imp_(new Implementation(canvas, CanvasPoint(- canvas.x / 2., - canvas.y / 2.)))
+Drawer::Drawer(const CanvasPoint & canvas, double canvas_margin)
+    : imp_(new Implementation(canvas, canvas_margin))
 {
     std::string background_color("white");
     imp_->shapes_.push_back(
-        std::make_shared<svg_rect>(CanvasPoint(imp_->canvas_start_.x, imp_->canvas_start_.y),
+        std::make_shared<svg_rect>(CanvasPoint(-imp_->canvas_.x / 2., -imp_->canvas_.y / 2.),
                                    CanvasPoint(imp_->canvas_.x, imp_->canvas_.y), background_color));
 }
 
@@ -196,7 +200,7 @@ void Drawer::store(const char * file) const
     of << svg_preambule;
 
     of << "<svg width='" << imp_->canvas_.x << "mm' height='" << imp_->canvas_.y << "mm' "
-        "viewBox='" << imp_->canvas_start_.x << ' ' << imp_->canvas_start_.y <<
+        "viewBox='" << -imp_->canvas_.x / 2. << ' ' << -imp_->canvas_.y / 2. <<
         ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
         "xmlns='http://www.w3.org/2000/svg' version='1.1'>\n";
 

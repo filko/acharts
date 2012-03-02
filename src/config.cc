@@ -133,6 +133,7 @@ struct Config::Implementation
 
         add("canvas.dimensions.x", length{297.});
         add("canvas.dimensions.y", length{210.});
+        add("canvas.outer-margin", length{10.});
 
         add("moon.enable", boolean{false});
 
@@ -266,6 +267,11 @@ const CanvasPoint Config::canvas_dimensions() const
 {
     return CanvasPoint(imp_->get<length>("canvas.dimensions.x").val,
                        imp_->get<length>("canvas.dimensions.y").val);
+}
+
+double Config::canvas_margin() const
+{
+    return imp_->get<length>("canvas.outer-margin").val;
 }
 
 bool Config::moon() const

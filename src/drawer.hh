@@ -20,8 +20,10 @@ public:
         sdiam
     };
 
-    explicit Drawer(const CanvasPoint & canvas);
+    Drawer(const CanvasPoint & canvas, double canvas_margin);
     ~Drawer();
+    Drawer(const Drawer &) = delete;
+    Drawer & operator=(const Drawer &) = delete;
 
     void set_projection(const std::shared_ptr<Projection> & proj);
 

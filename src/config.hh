@@ -50,6 +50,7 @@ public:
 
     std::pair<double, double> location() const;
     const CanvasPoint canvas_dimensions() const;
+    double canvas_margin() const;
     const std::string projection_type() const;
     const ln_equ_posn projection_centre() const;
     const ln_equ_posn projection_dimensions() const;
