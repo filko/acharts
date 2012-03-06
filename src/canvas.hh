@@ -17,6 +17,11 @@ struct CanvasPoint
     {
     }
 
+    bool nan() const
+    {
+        return isnan(x);
+    }
+
     CanvasPoint & operator+=(const CanvasPoint & rhs)
     {
         x += rhs.x;

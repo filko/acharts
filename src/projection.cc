@@ -57,6 +57,9 @@ public:
         double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
         double cosc(sin(center_.dec) * sin(dec) + cos(center_.dec) * cos(dec) * cos(ra - center_.ra));
         double c(acos(cosc));
+        if (fabs(c - M_PI) < 0.0001)
+            return CanvasPoint{NAN, NAN};
+
         double k;
         if (c == 0)
             k = 1;
