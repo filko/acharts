@@ -357,13 +357,19 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
 
 void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
 {
-    imp_->shapes_.push_back(std::make_shared<svg_text>(body, imp_->projection_->project(pos), 4.));
+    auto coord(imp_->projection_->project(pos));
+    if (coord.nan() || ! imp_->in_canvas(coord))
+        return;
+
+    imp_->shapes_.push_back(std::make_shared<svg_text>(body, coord, 4.));
 }
 
 void Drawer::draw(const SolarObject & object, double jd, object_rendering_type type, bool label)
 {
     auto pos(object.get_equ_coords(jd));
     auto coord(imp_->projection_->project(pos));
+    if (coord.nan() || ! imp_->in_canvas(coord))
+        return;
 
     double s(0.);
     switch (type)
