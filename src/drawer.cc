@@ -73,21 +73,20 @@ struct svg_rect
 struct svg_cbezier
     : public svg_shape
 {
-    std::vector<CanvasPoint> path;
+    BezierCurve path;
     std::string stroke;
     double width;
 
-    svg_cbezier(std::vector<CanvasPoint> && path, const std::string & stroke, double width)
+    svg_cbezier(const BezierCurve & path, const std::string & stroke, double width)
         : path(std::move(path)), stroke(stroke), width(width)
     {
     }
 
     virtual void flush(std::ostream & out)
     {
-        auto beziered(interpolate_bezier(path));
 /*
         // drawing ugly control points, usefull for debugging
-        for (auto i(beziered.cbegin()), i_end(beziered.cend());
+        for (auto i(path.cbegin()), i_end(path.cend());
              i != i_end; ++i)
         {
             out << "<circle cx='" << i->p.x << "' cy='" << i->p.y << "' r='2px' fill='black' />\n";
@@ -97,9 +96,9 @@ struct svg_cbezier
 */
 
         out << "<path stroke='gray' stroke-width='" << width << "' fill='none'\n  d='";
-        auto prev(beziered.cbegin());
+        auto prev(path.cbegin());
         out << 'M' << prev->p.x << ',' << prev->p.y << ' ';
-        for (auto next(prev + 1), i_end(beziered.cend());
+        for (auto next(prev + 1), i_end(path.cend());
              next != i_end; prev = next, ++next)
         {
             out << 'C' << prev->cp.x << ',' << prev->cp.y << ' '
@@ -171,6 +170,92 @@ struct Drawer::Implementation
         shapes_.push_back(std::make_shared<svg_circle>(coord, s, "#22222", 0., ""));
         return s;
     }
+
+    enum {
+        inside = 0, // 0000
+        left   = 1, // 0001
+        right  = 2, // 0010
+        bottom = 4, // 0100
+        top    = 8  // 1000
+    };
+
+    int Outcode(const CanvasPoint & p)
+    {
+        int code(0);
+
+        if (p.x < canvas_start_.x)
+            code |= left;
+        else if (p.x > canvas_end_.x)
+            code |= right;
+
+        if (p.y < canvas_start_.y)
+            code |= bottom;
+        else if (p.y > canvas_end_.y)
+            code |= top;
+
+        return code;
+    }
+
+    bool CohenSutherland(CanvasPoint p0, CanvasPoint p1)
+    {
+        int code0 = Outcode(p0);
+        int code1 = Outcode(p1);
+        bool ret(false);
+
+        while (true)
+        {
+            if (!(code0 | code1))
+            {
+                ret = true;
+                break;
+            }
+            else if (code0 & code1)
+            {
+                break;
+            }
+            else
+            {
+                CanvasPoint p;
+                int code = code0 ? code0 : code1;
+
+                // use formulas y = y0 + slope * (x - x0), x = x0 + (1 / slope) * (y - y0)
+                if (code & top)
+                {
+                    p.x = p0.x + (p1.x - p0.x) * (canvas_end_.y - p0.y) / (p1.y - p0.y);
+                    p.y = canvas_end_.y;
+                }
+                else if (code & bottom)
+                {
+                    p.x = p0.x + (p1.x - p0.x) * (canvas_start_.y - p0.y) / (p1.y - p0.y);
+                    p.y = canvas_start_.y;
+                }
+                else if (code & right)
+                {
+                    p.y = p0.y + (p1.y - p0.y) * (canvas_end_.x - p0.x) / (p1.x - p0.x);
+                    p.x = canvas_end_.x;
+                }
+                else if (code & left)
+                {
+                    p.y = p0.y + (p1.y - p0.y) * (canvas_start_.x - p0.x) / (p1.x - p0.x);
+                    p.x = canvas_start_.x;
+                }
+
+                if (code == code0)
+                {
+                    p0 = p;
+                    code0 = Outcode(p0);
+                }
+                else
+                {
+                    p1 = p;
+                    code1 = Outcode(p1);
+                }
+            }
+        }
+
+        return ret;
+    }
+
 };
 
 Drawer::Drawer(const CanvasPoint & canvas, double canvas_margin)
@@ -230,11 +315,44 @@ void Drawer::draw(const Star & star)
 
 void Drawer::draw(const std::vector<ln_equ_posn> & path)
 {
-    std::vector<CanvasPoint> ret;
+    std::vector<std::vector<CanvasPoint>> ret(1);
     for (auto i(path.begin()), i_end(path.end());
          i != i_end; ++i)
-        ret.push_back(imp_->projection_->project(*i));
-    imp_->shapes_.push_back(std::make_shared<svg_cbezier>(std::move(ret), "#888888", 0.1));
+    {
+        auto p(imp_->projection_->project(*i));
+        if (! p.nan())
+            ret.back().push_back(p);
+        else if (! ret.back().empty())
+            ret.push_back(std::vector<CanvasPoint>());
+    }
+
+    std::vector<BezierCurve> strips(1);
+    for (auto b(ret.cbegin()), b_end(ret.cend());
+         b != b_end; ++b)
+    {
+        if (! strips.back().empty())
+            strips.push_back(BezierCurve());
+
+        auto beziered(interpolate_bezier(*b));
+        auto first(beziered.cbegin()), second(first + 1);
+        for (auto end(beziered.cend());
+             second != end; first = second, ++second)
+        {
+            if (imp_->CohenSutherland(first->p, second->p))
+            {
+                if (strips.back().empty())
+                    strips.back().push_back(*first);
+                strips.back().push_back(*second);
+            }
+            else if (! strips.back().empty())
+                strips.push_back(BezierCurve());
+        }
+    }
+
+    for (auto i(strips.cbegin()), i_end(strips.cend());
+         i != i_end; ++i)
+        if (! i->empty())
+            imp_->shapes_.push_back(std::make_shared<svg_cbezier>(*i, "#888888", 0.1));
 }
 
 void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
