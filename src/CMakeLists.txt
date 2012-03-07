@@ -10,6 +10,7 @@ add_executable(charts
   planet.cc
   projection.cc
   stars.cc
+  types.cc
 )
 
 target_link_libraries(charts nova rt)

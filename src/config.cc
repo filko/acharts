@@ -13,52 +13,7 @@
 #include "config_parser.hh"
 #include "exceptions.hh"
 #include "now.hh"
-
-struct angle
-{
-    double val;
-};
-
-std::ostream & operator<<(std::ostream & os, const angle & a)
-{
-    os << "Angle: " << a.val;
-    return os;
-}
-
-struct timestamp
-{
-    double val;
-};
-
-std::ostream & operator<<(std::ostream & os, const timestamp & t)
-{
-    auto flags(os.flags());
-    os << "Timestamp: " << std::fixed << t.val;
-    os.flags(flags);
-    return os;
-}
-
-struct length
-{
-    double val;
-};
-
-std::ostream & operator<<(std::ostream & os, const length & s)
-{
-    os << "Length: " << s.val << " mm";
-    return os;
-}
-
-struct boolean
-{
-    bool val;
-};
-
-std::ostream & operator<<(std::ostream & os, const boolean & b)
-{
-    os << (b.val ? "on" : "off");
-    return os;
-}
+#include "types.hh"
 
 struct empty_type {};
 std::ostream & operator<<(std::ostream & os, empty_type)
