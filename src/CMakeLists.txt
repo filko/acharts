@@ -9,6 +9,7 @@ add_executable(charts
   now.cc
   planet.cc
   projection.cc
+  solar_object.cc
   stars.cc
   types.cc
 )
