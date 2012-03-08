@@ -9,7 +9,6 @@
 #include <deque>
 #include <fstream>
 
-#include "catalogue.hh"
 #include "config_parser.hh"
 #include "exceptions.hh"
 #include "now.hh"
@@ -73,6 +72,7 @@ struct Config::Implementation
     boost::property_tree::basic_ptree<std::string, Option> tree;
     std::string current_section;
     std::deque<std::shared_ptr<Catalogue>> catalogues;
+    std::deque<std::shared_ptr<Track>> tracks;
 
     Implementation()
         : current_section("core")
@@ -103,6 +103,11 @@ struct Config::Implementation
         add("planets.labels", boolean{true});
 
         add("sun.enable", boolean{false});
+
+        add("track.object", "");
+        add("track.start", timestamp{Now::get_jd()});
+        add("track.end", timestamp{Now::get_jd() + 30.});
+        add("track.interval", timestamp{1.0});
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -124,6 +129,22 @@ struct Config::Implementation
                     throw InternalError("Tried setting unknown catalogue property: " + path);
                 }
             }
+            else if ("track" == current_section)
+            {
+                Option option(i.data());
+                boost::apply_visitor(value_parser_visitor(value), option);
+                auto & track(*tracks.back());
+                if ("track.object" == path)
+                    track.name = boost::get<std::string>(option);
+                else if ("track.start" == path)
+                    track.start = boost::get<timestamp>(option).val;
+                else if ("track.end" == path)
+                    track.end = boost::get<timestamp>(option).val;
+                else if ("track.interval" == path)
+                    track.interval = boost::get<timestamp>(option).val;
+                else
+                    throw InternalError("Tried setting unknown track property: " + path);
+            }
             else
                 boost::apply_visitor(value_parser_visitor(value), i.data());
         }
@@ -143,10 +164,12 @@ struct Config::Implementation
         {
             throw ConfigError("Tried opening unknown section '" + section + "'");
         }
+
         if ("catalogue" == section)
-        {
             catalogues.push_back(std::make_shared<Catalogue>());
-        }
+        else if ("track" == section)
+            tracks.push_back(std::make_shared<Track>());
+
         current_section = section;
     }
 
@@ -155,7 +178,7 @@ struct Config::Implementation
         for (auto i(tree.begin()), i_end(tree.end());
              i != i_end; ++i)
         {
-            if ("catalogue" == i->first)
+            if ("catalogue" == i->first || "track" == i->first)
                 continue;
 
             std::cout << '[' << i->first << ']' << std::endl;
@@ -299,6 +322,16 @@ const ConstCatalogueIterator Config::end_catalogues() const
     return ConstCatalogueIterator(this, imp_->catalogues.size());
 }
 
+const ConstTrackIterator Config::begin_tracks() const
+{
+    return ConstTrackIterator(this, 0);
+}
+
+const ConstTrackIterator Config::end_tracks() const
+{
+    return ConstTrackIterator(this, imp_->tracks.size());
+}
+
 ConstCatalogueIterator::ConstCatalogueIterator(const Config * config, std::size_t i)
     : config_(config),
       index_(i)
@@ -322,6 +355,39 @@ const std::shared_ptr<Catalogue> ConstCatalogueIterator::operator->() const
 }
 
 bool operator==(const ConstCatalogueIterator & lhs, const ConstCatalogueIterator & rhs)
+{
+    if (lhs.config_ != rhs.config_)
+        return false;
+
+    if (lhs.index_ != rhs.index_)
+        return false;
+
+    return true;
+}
+
+ConstTrackIterator::ConstTrackIterator(const Config * config, std::size_t i)
+    : config_(config),
+      index_(i)
+{
+}
+
+ConstTrackIterator & ConstTrackIterator::operator++()
+{
+    ++index_;
+    return *this;
+}
+
+Track & ConstTrackIterator::operator*() const
+{
+    return *config_->imp_->tracks[index_];
+}
+
+const std::shared_ptr<Track> ConstTrackIterator::operator->() const
+{
+    return config_->imp_->tracks[index_];
+}
+
+bool operator==(const ConstTrackIterator & lhs, const ConstTrackIterator & rhs)
 {
     if (lhs.config_ != rhs.config_)
         return false;

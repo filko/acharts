@@ -389,3 +389,13 @@ void Drawer::draw(const SolarObject & object, double jd, object_rendering_type t
         imp_->shapes_.push_back(std::make_shared<svg_text>(object.name(), coord, 4.));
     }
 }
+
+void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
+{
+    std::vector<ln_equ_posn> path;
+    for (double t(track.start); t <= track.end; t += track.interval)
+    {
+        path.push_back(object->get_equ_coords(t));
+    }
+    draw(path);
+}

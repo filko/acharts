@@ -7,6 +7,7 @@
 #include "stars.hh"
 #include "projection.hh"
 #include "solar_object.hh"
+#include "track.hh"
 
 class Drawer
 {
@@ -33,6 +34,7 @@ public:
     void draw(const SolarObject & object, double JD, object_rendering_type type = magnitudo, bool label = false);
     void draw(const std::vector<ln_equ_posn> & path);
     void draw(const std::string & body, const ln_equ_posn & pos);
+    void draw(const Track & track, const std::shared_ptr<const SolarObject> & object);
 };
 
 #endif
