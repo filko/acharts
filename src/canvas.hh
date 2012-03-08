@@ -97,4 +97,9 @@ inline CanvasPoint operator-(const CanvasPoint & r)
     return ret;
 }
 
+inline double operator*(const CanvasPoint & l, const CanvasPoint & r)
+{
+    return l.x * r.x + l.y * r.y;
+}
+
 #endif

@@ -102,7 +102,7 @@ struct svg_cbezier
 
     virtual void flush(std::ostream & out)
     {
-/*
+#if 0
         // drawing ugly control points, usefull for debugging
         for (auto i(path.cbegin()), i_end(path.cend());
              i != i_end; ++i)
@@ -111,7 +111,7 @@ struct svg_cbezier
             out << "<circle cx='" << i->cm.x << "' cy='" << i->cm.y << "' r='1px' fill='blue' />\n";
             out << "<circle cx='" << i->cp.x << "' cy='" << i->cp.y << "' r='1px' fill='green' />\n";
         }
-*/
+#endif
 
         out << "<path stroke='gray' stroke-width='" << width << "' fill='none'\n  d='";
         auto prev(path.cbegin());

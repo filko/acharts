@@ -5,13 +5,18 @@
 namespace
 {
 
-BezierPoint bezier_ending(const CanvasPoint & first, const CanvasPoint & second)
+BezierPoint mirror_bezier(const CanvasPoint & A, const CanvasPoint & B, const CanvasPoint & Bprim)
 {
-    CanvasPoint mirror(second - first);
-    CanvasPoint perpendicular(-mirror.y, mirror.x);
+    CanvasPoint O((A + B) / 2.);
+    CanvasPoint n(A - B);
+    n = CanvasPoint{-n.y, n.x};
+    n /= n.norm();
+
+    CanvasPoint Aprim(-Bprim + 2 * O + 2 * n * ((Bprim - O) * n));
+    CanvasPoint diff(Aprim - A);
+    CanvasPoint perpendicular(-diff.y, diff.x);
     perpendicular /= perpendicular.norm();
-    // we push endings just a little in the direction of next/prev points
-    return BezierPoint{ first, first - 0.1 * mirror, first + 0.1 * mirror, perpendicular };
+    return BezierPoint{ A, A - diff, Aprim, perpendicular };
 }
 
 }
@@ -25,10 +30,14 @@ BezierCurve interpolate_bezier(const std::vector<CanvasPoint> & curve)
 
     auto iAm(curve.cbegin()), iA(iAm + 1);
 
-    ret.push_back(bezier_ending(*iAm, *iA));
-
     if (curve.size() >= 3)
     {
+        {
+            BezierPoint b;
+            b.p = *iAm;
+            ret.push_back(b);
+        }
+
         for (auto iAp(iA + 1), iA_end(curve.end());
              iAp != iA_end; iAm = iA, iA = iAp, ++iAp)
         {
@@ -54,11 +63,22 @@ BezierCurve interpolate_bezier(const std::vector<CanvasPoint> & curve)
 
             ret.push_back(BezierPoint{A, Cm, Cp, perpendicular});
         }
-    }
 
-    auto e(bezier_ending(*iA, *iAm));
-    std::swap(e.cm, e.cp);
-    ret.push_back(e);
+        ret[0] = mirror_bezier(ret[0].p, ret[1].p, ret[1].cm);
+        auto e(mirror_bezier(*iA, ret.back().p, ret.back().cp));
+        std::swap(e.cm, e.cp);
+        ret.push_back(e);
+    }
+    else
+    {
+        CanvasPoint A(*iAm), B(*iA);
+        CanvasPoint mirror(B - A);
+        CanvasPoint perpendicular(-mirror.y, mirror.x);
+        perpendicular /= perpendicular.norm();
+
+        ret.push_back(BezierPoint{A, A - mirror, B, perpendicular});
+        ret.push_back(BezierPoint{B, A, B + mirror, perpendicular});
+    }
 
     return ret;
 }
