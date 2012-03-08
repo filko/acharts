@@ -67,3 +67,9 @@ std::ostream & operator<<(std::ostream & os, const boolean & b)
     os << (b.val ? "on" : "off");
     return os;
 }
+
+std::ostream & operator<<(std::ostream & os, const integer & i)
+{
+    os << i.val;
+    return os;
+}

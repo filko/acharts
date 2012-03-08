@@ -20,7 +20,7 @@ std::ostream & operator<<(std::ostream & os, empty_type)
     return os;
 }
 
-typedef boost::variant<empty_type, angle, timestamp, length, boolean, std::string> Option;
+typedef boost::variant<empty_type, angle, timestamp, length, boolean, integer, std::string> Option;
 
 namespace
 {
@@ -56,6 +56,11 @@ struct value_parser_visitor
     void operator()(boolean & b) const
     {
         b.val = config_parser::parse_boolean(value_);
+    }
+
+    void operator()(integer & i) const
+    {
+        i.val = config_parser::parse_integer(value_);
     }
 
     void operator()(empty_type) const
@@ -107,7 +112,8 @@ struct Config::Implementation
         add("track.object", "");
         add("track.start", timestamp{Now::get_jd()});
         add("track.end", timestamp{Now::get_jd() + 30.});
-        add("track.interval", timestamp{1.0});
+        add("track.mark-interval", timestamp{7.0});
+        add("track.interval-ticks", integer{7});
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -140,8 +146,10 @@ struct Config::Implementation
                     track.start = boost::get<timestamp>(option).val;
                 else if ("track.end" == path)
                     track.end = boost::get<timestamp>(option).val;
-                else if ("track.interval" == path)
-                    track.interval = boost::get<timestamp>(option).val;
+                else if ("track.mark-interval" == path)
+                    track.mark_interval = boost::get<timestamp>(option).val;
+                else if ("track.interval-ticks" == path)
+                    track.interval_ticks = boost::get<integer>(option).val;
                 else
                     throw InternalError("Tried setting unknown track property: " + path);
             }

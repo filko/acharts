@@ -34,4 +34,10 @@ struct boolean
 };
 std::ostream & operator<<(std::ostream & os, const boolean & b);
 
+struct integer
+{
+    int val;
+};
+std::ostream & operator<<(std::ostream & os, const integer & i);
+
 #endif

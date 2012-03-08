@@ -293,7 +293,7 @@ phoenix::function<now_get_imp> now_get;
 
 template <typename Iterator>
 class timestamp_grammar
-        : public qi::grammar<Iterator, double()>
+    : public qi::grammar<Iterator, double()>
 {
 public:
     timestamp_grammar()
@@ -329,7 +329,7 @@ double parse_timestamp(const std::string & in)
 
 template <typename Iterator>
 class length_grammar
-        : public qi::grammar<Iterator, double()>
+    : public qi::grammar<Iterator, double()>
 {
 public:
     length_grammar()
@@ -357,7 +357,7 @@ double parse_length(const std::string & in)
 
 template <typename Iterator>
 class boolean_grammar
-        : public qi::grammar<Iterator, bool()>
+    : public qi::grammar<Iterator, bool()>
 {
 public:
     boolean_grammar()
@@ -379,6 +379,34 @@ bool parse_boolean(const std::string & in)
     if (!r or begin != end)
     {
         throw ConfigValueError("boolean", in);
+    }
+    return ret;
+}
+
+template <typename Iterator>
+class integer_grammar
+    : public qi::grammar<Iterator, int()>
+{
+public:
+    integer_grammar()
+        : integer_grammar::base_type(start)
+    {
+        using namespace boost::spirit::qi;
+        start %= int_;
+    }
+
+    qi::rule<Iterator, int()> start;
+};
+
+int parse_integer(const std::string & in)
+{
+    integer_grammar<std::string::const_iterator> pars;
+    int ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("integer", in);
     }
     return ret;
 }

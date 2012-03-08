@@ -6,12 +6,14 @@
 struct Track
 {
     std::string name;
-    double start, end, interval;
+    double start, end, mark_interval;
+    int interval_ticks;
 
     Track()
         : start(Now::get_jd()),
           end(Now::get_jd() + 30.),
-          interval(1.0)
+          mark_interval(7.0),
+          interval_ticks(7)
     {
     }
 };

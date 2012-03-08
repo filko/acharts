@@ -70,6 +70,24 @@ struct svg_rect
     }
 };
 
+struct svg_line
+    : public svg_shape
+{
+    CanvasPoint start, end;
+    double width;
+
+    svg_line(const CanvasPoint & start, const CanvasPoint & end, double width)
+        : start(start), end(end), width(width)
+    {
+    }
+
+    virtual void flush(std::ostream & out)
+    {
+        out << "<line x1='" << start.x << "' y1='" << start.y << "' "
+            "x2='" << end.x << "' y2='" << end.y << "' stroke='gray' stroke-width='" << width << "' />";
+    }
+};
+
 struct svg_cbezier
     : public svg_shape
 {
@@ -355,6 +373,30 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
             imp_->shapes_.push_back(std::make_shared<svg_cbezier>(*i, "#888888", 0.1));
 }
 
+void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
+{
+    std::vector<ln_equ_posn> path;
+    std::vector<CanvasPoint> cpath;
+    double step(track.mark_interval / track.interval_ticks);
+    for (double t(track.start); t <= track.end; t += step)
+    {
+        auto coord(object->get_equ_coords(t));
+        path.push_back(coord);
+        cpath.push_back(imp_->projection_->project(coord));
+    }
+    draw(path);
+
+    auto beziered(interpolate_bezier(cpath));
+    for (int i(0), i_end(beziered.size());
+         i < i_end; i += track.interval_ticks)
+    {
+        auto p(beziered[i]);
+        if (! p.p.nan() && imp_->in_canvas(p.p))
+            imp_->shapes_.push_back(
+                std::make_shared<svg_line>((p.p - p.perpendicular), (p.p + p.perpendicular), 0.1));
+    }
+}
+
 void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
 {
     auto coord(imp_->projection_->project(pos));
@@ -388,14 +430,4 @@ void Drawer::draw(const SolarObject & object, double jd, object_rendering_type t
         coord.y += 1.;
         imp_->shapes_.push_back(std::make_shared<svg_text>(object.name(), coord, 4.));
     }
-}
-
-void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
-{
-    std::vector<ln_equ_posn> path;
-    for (double t(track.start); t <= track.end; t += track.interval)
-    {
-        path.push_back(object->get_equ_coords(t));
-    }
-    draw(path);
 }
