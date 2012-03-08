@@ -8,7 +8,7 @@
 
 struct BezierPoint
 {
-    CanvasPoint p, cm, cp;
+    CanvasPoint p, cm, cp, perpendicular;
 };
 
 typedef std::vector<BezierPoint> BezierCurve;

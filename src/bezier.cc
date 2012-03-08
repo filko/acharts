@@ -7,9 +7,11 @@ namespace
 
 BezierPoint bezier_ending(const CanvasPoint & first, const CanvasPoint & second)
 {
-    CanvasPoint mirror = second - first;
+    CanvasPoint mirror(second - first);
+    CanvasPoint perpendicular(-mirror.y, mirror.x);
+    perpendicular /= perpendicular.norm();
     // we push endings just a little in the direction of next/prev points
-    return BezierPoint{ first, first - 0.1 * mirror, first + 0.1 * mirror };
+    return BezierPoint{ first, first - 0.1 * mirror, first + 0.1 * mirror, perpendicular };
 }
 
 }
@@ -48,8 +50,9 @@ BezierCurve interpolate_bezier(const std::vector<CanvasPoint> & curve)
 
             CanvasPoint Cm = A - de * b;
             CanvasPoint Cp = A + de * u;
+            CanvasPoint perpendicular{-de.y, de.x};
 
-            ret.push_back(BezierPoint{A, Cm, Cp});
+            ret.push_back(BezierPoint{A, Cm, Cp, perpendicular});
         }
     }
 
