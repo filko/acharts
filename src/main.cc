@@ -3,72 +3,110 @@
 
 #include "config.hh"
 #include "drawer.hh"
+#include "exceptions.hh"
 #include "projection.hh"
 #include "stars.hh"
+#include "types.hh"
 
 int main(int arc, char * arv[])
 {
     try
     {
+        std::cout << "Processing configs... " << std::flush;
         Config config(arc, arv);
+        std::cout << "done." << std::endl;
 
-        auto loc(config.location());
-        std::cout << loc.first << ' ' << loc.second << std::endl;
+        //        return 0;
 
-        return 0;
-        Catalogue cat;
-        cat.load("catalog");
+        CanvasPoint canvas(config.canvas_dimensions());
+        ln_equ_posn apparent_canvas(config.projection_dimensions()),
+            center(config.projection_centre());
 
-        std::cerr << "Catalog size: " << cat.size() << std::endl;
+        std::shared_ptr<Projection> projection(ProjectionFactory::create(config.projection_type(),
+                                                                         canvas, apparent_canvas, center));
 
-        OutputCoord canvas = { 297., 210. };
-        ln_equ_posn apparent_canvas = { 0., 25. },
-            center = { 84., -1. };
-
-        std::shared_ptr<Projection> projection(ProjectionFactory::create(canvas, apparent_canvas, center));
-
-        Drawer drawer(canvas);
+        Drawer drawer(canvas, config.canvas_margin());
         drawer.set_projection(projection);
 
-        std::size_t k(0);
-        for (auto i(cat.get_stars().begin()), i_end(cat.get_stars().end());
-             i != i_end ; ++i, ++k)
+        std::cout << "Loading catalogues... " << std::flush;
+        for (auto c(config.begin_catalogues()), c_end(config.end_catalogues());
+             c != c_end; ++c)
         {
-//        std::cout  << i->pos_.ra << '\t' << i->pos_.dec << '\t' << i->vmag_ << '\t' << i->common_name_ << '\n';
-//        if (i->vmag_ < 4.) // &&
-//            (i->pos_.ra > 4.5 / 24 * 360) && (i->pos_.ra < 6.5 / 24 * 360) &&
-//            (i->pos_.dec > -12.) && (i->pos_.dec < 12.))
+            std::cout << c->path() << ", " << std::flush;
+            c->load();
+
+            for (auto i(c->begin_stars()), i_end(c->end_stars());
+                 i != i_end ; ++i)
             {
                 drawer.draw(*i);
-                std::cerr << '.';
             }
         }
-        std::cerr << '\n';
+        std::cout << "done." << std::endl;
 
+        std::cout << "Loading solar objects..." << std::flush;
+        SolarObjectManager solar_manager;
+        std::vector<std::shared_ptr<const SolarObject>> planets;
+        auto planet_names(config.planets());
+        for (auto p(planet_names.begin()), p_end(planet_names.end());
+             p != p_end; ++p)
+        {
+            planets.push_back(solar_manager.get(*p));
+        }
 
-        for (double x(0); x < 359.9; x += 30.)
+        for (auto p(planets.cbegin()), p_end(planets.cend());
+             p != p_end; ++p)
+        {
+            drawer.draw(**p, config.t(), Drawer::magnitudo, config.planets_labels());
+        }
+
+        if (config.moon())
+        {
+            drawer.draw(*solar_manager.get("moon"), config.t(), Drawer::sdiam, true);
+        }
+
+        if (config.sun())
+        {
+            drawer.draw(*solar_manager.get("sun"), config.t(), Drawer::sdiam, true);
+        }
+        std::cout << "done." << std::endl;
+
+        std::cout << "Drawing tracks... " << std::flush;
+        for (auto track(config.begin_tracks()), track_end(config.end_tracks());
+             track != track_end; ++track)
+        {
+            std::cout << track->name << " " << std::flush;
+            drawer.draw(*track, solar_manager.get(track->name));
+        }
+        std::cout << "done." << std::endl;
+
+        for (double x(0); x < 359.9; x += 15.)
         {
             std::vector<ln_equ_posn> path;
-            for (double y(-88.); y < 88.1; y += .5)
+            for (double y(-88.); y < 88.1; y += 2.)
             {
                 path.push_back({x, y});
             }
             drawer.draw(path);
-            drawer.draw(std::to_string(int(x)), {x, 0.});
+            drawer.draw(stringify(angle{x}, as_hour), {x, 0.});
         }
 
-        for (double y(-60); y < 60.1; y += 30.)
+        for (double y(-60); y < 60.1; y += 10.)
         {
             std::vector<ln_equ_posn> path;
-            for (double x(0.); x < 360.1; x += .5)
+            for (double x(0.); x < 360.1; x += 2.)
             {
                 path.push_back({x, y});
             }
             drawer.draw(path);
-            drawer.draw(std::to_string(int(y)), {0., y});
+            drawer.draw(stringify(angle{y}, as_degree), {0., y});
         }
 
         drawer.store("test-2.svg");
+    }
+    catch (const ConfigError & e)
+    {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
     catch (const std::exception & e)
     {

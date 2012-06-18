@@ -16,6 +16,12 @@ double parse_length(const std::string & in);
 bool parse_boolean(const std::string & in);
 int parse_integer(const std::string & in);
 
+struct Description
+{
+};
+
+Description parse_catalog_ReadMe(std::istream & is, const std::string & catalog_name);
+
 }
 
 #endif

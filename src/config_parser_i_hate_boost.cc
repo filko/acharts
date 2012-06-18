@@ -444,3 +444,82 @@ struct push_back_container<config_parser::parser_proxy, config_variant>
 #endif
 
 }}}
+
+namespace config_parser
+{
+
+struct section_proxy
+    : boost::static_visitor<>
+{
+    typedef int value_type;
+
+    void insert(const int & i);
+
+    int nothing() const;
+};
+
+struct ReadMe_proxy
+    : boost::static_visitor<>
+{
+    typedef section_proxy value_type;
+
+    void push_back(const section_proxy & )
+    {
+    }
+};
+
+template <typename Iterator>
+class ReadMe_grammar
+    : public qi::grammar<Iterator, ReadMe_proxy()>
+{
+public:
+    ReadMe_grammar()
+        : ReadMe_grammar::base_type(start)
+    {
+        line = *~char_("=-") >> eol;
+        header = line >> +char_('=') >> eol >> *line >> +char_('=') >> eol;
+        empty_line = eol;
+        comment = empty_line | *(char_ - eol);
+        start = header >> *(section | comment);
+    }
+
+    qi::rule<Iterator, ReadMe_proxy()> start;
+    qi::rule<Iterator> header, comment, empty_line, line;
+    qi::rule<Iterator, section_proxy()> section;
+};
+
+Description parse_catalog_ReadMe(std::istream & is, const std::string & catalog_name)
+{
+    std::stringstream iss;
+    iss << is.rdbuf();
+    std::string ss(iss.str());
+    ReadMe_grammar<std::string::const_iterator> grammar;
+
+    ReadMe_proxy t;
+    auto iter(ss.cbegin());
+    bool r(qi::parse(iter, ss.cend(), grammar, t));
+
+    return Description();
+}
+
+}
+
+BOOST_FUSION_ADAPT_ADT(
+    config_parser::section_proxy,
+    (int, int, obj.nothing(), obj.insert(val))
+)
+
+namespace boost { namespace spirit { namespace traits
+{
+
+template <>
+struct push_back_container<config_parser::ReadMe_proxy, config_parser::section_proxy>
+{
+    static bool call(config_parser::ReadMe_proxy & t, config_parser::section_proxy val)
+    {
+        t.push_back(val);
+        return true;
+    }
+};
+
+}}}

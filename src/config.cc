@@ -235,8 +235,6 @@ Config::Config(int arc, char * arv[])
     config_parser::parse_config(f,
                                 [&](const std::string & s)                        { imp_->accept_section(s); },
                                 [&](const std::string & p, const std::string & v) { imp_->accept_value(p, v); });
-
-    imp_->dump();
 }
 
 Config::~Config()
