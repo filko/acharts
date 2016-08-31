@@ -227,7 +227,7 @@ Config::Config(int arc, char * arv[])
 {
     if (arc < 2)
     {
-        abort();
+        throw std::runtime_error("No configuration specified on the command line.");
     }
     std::ifstream f(arv[1]);
     if (! f)
