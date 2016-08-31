@@ -93,6 +93,7 @@ void Catalogue::load()
     {
         try
         {
+            // Bright Star Catalogue
             lnh_equ_posn hpos = {
                 { reader.get_short(75, 2), reader.get_short(77, 2), reader.get_double(79, 4) },
                 { short(reader.get_sign(83) == -1 ? 1 : 0), reader.get_short(84, 2), reader.get_short(86, 2), double(reader.get_short(88, 2)) }
