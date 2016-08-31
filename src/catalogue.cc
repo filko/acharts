@@ -21,7 +21,7 @@ public:
 
     bool next()
     {
-        return std::getline(stream_, line_);
+        return bool(std::getline(stream_, line_));
     }
 
     std::string get_string(int begin, int size)

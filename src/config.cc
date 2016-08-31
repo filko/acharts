@@ -8,6 +8,7 @@
 #include <boost/variant.hpp>
 #include <deque>
 #include <fstream>
+#include <iostream>
 
 #include "config_parser.hh"
 #include "exceptions.hh"
