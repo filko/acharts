@@ -172,7 +172,7 @@ void parse_config(std::istream & is, const SectionCallback & scal, const ValueCa
     spirit::line_pos_iterator<decltype(s.cbegin())> begin(s.cbegin()), iter(begin), iter_end(s.cend());
     typedef decltype(iter) Iter;
 
-    auto skipper(ascii::space | '#' >> *(qi::char_ - qi::eol) >> qi::eol);
+    auto skipper(boost::proto::deep_copy(ascii::space | '#' >> *(qi::char_ - qi::eol) >> qi::eol));
     config_grammar<Iter, decltype(skipper)> pars(begin);
     parser_proxy t(scal, vcal);
     try
