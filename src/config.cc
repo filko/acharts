@@ -184,14 +184,13 @@ struct Config::Implementation
 
     void dump() const
     {
-        for (auto i(tree.begin()), i_end(tree.end());
-             i != i_end; ++i)
+        for (auto const i : tree)
         {
-            if ("catalogue" == i->first || "track" == i->first)
+            if ("catalogue" == i.first || "track" == i.first)
                 continue;
 
-            std::cout << '[' << i->first << ']' << std::endl;
-            dump_section(&i->second);
+            std::cout << '[' << i.first << ']' << std::endl;
+            dump_section(&i.second);
         }
     }
 
@@ -211,13 +210,12 @@ struct Config::Implementation
 private:
     void dump_section(const decltype(tree) * t, const std::string & p = "") const
     {
-        for (auto i(t->begin()), i_end(t->end());
-             i != i_end; ++i)
+        for (auto const i : *t)
         {
-            if (i->second.data().type() != typeid(empty_type))
-                std::cout << p << i->first << "\t" << i->second.data() << std::endl;
+            if (i.second.data().type() != typeid(empty_type))
+                std::cout << p << i.first << "\t" << i.second.data() << std::endl;
 
-            dump_section(&i->second, p + i->first + '.');
+            dump_section(&i.second, p + i.first + '.');
         }
     }
 };

@@ -47,16 +47,14 @@ int main(int arc, char * arv[])
         SolarObjectManager solar_manager;
         std::vector<std::shared_ptr<const SolarObject>> planets;
         auto planet_names(config.planets());
-        for (auto p(planet_names.begin()), p_end(planet_names.end());
-             p != p_end; ++p)
+        for (auto const & p : planet_names)
         {
-            planets.push_back(solar_manager.get(*p));
+            planets.push_back(solar_manager.get(p));
         }
 
-        for (auto p(planets.cbegin()), p_end(planets.cend());
-             p != p_end; ++p)
+        for (auto const & p : planets)
         {
-            drawer.draw(**p, config.t(), Drawer::magnitudo, config.planets_labels());
+            drawer.draw(*p, config.t(), Drawer::magnitudo, config.planets_labels());
         }
 
         if (config.moon())

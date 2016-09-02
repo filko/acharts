@@ -104,12 +104,11 @@ struct svg_cbezier
     {
 #if 0
         // drawing ugly control points, usefull for debugging
-        for (auto i(path.cbegin()), i_end(path.cend());
-             i != i_end; ++i)
+        for (auto const i : path)
         {
-            out << "<circle cx='" << i->p.x << "' cy='" << i->p.y << "' r='2px' fill='black' />\n";
-            out << "<circle cx='" << i->cm.x << "' cy='" << i->cm.y << "' r='1px' fill='blue' />\n";
-            out << "<circle cx='" << i->cp.x << "' cy='" << i->cp.y << "' r='1px' fill='green' />\n";
+            out << "<circle cx='" << i.p.x << "' cy='" << i.p.y << "' r='2px' fill='black' />\n";
+            out << "<circle cx='" << i.cm.x << "' cy='" << i.cm.y << "' r='1px' fill='blue' />\n";
+            out << "<circle cx='" << i.cp.x << "' cy='" << i.cp.y << "' r='1px' fill='green' />\n";
         }
 #endif
 
@@ -307,9 +306,8 @@ void Drawer::store(const char * file) const
         ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
         "xmlns='http://www.w3.org/2000/svg' version='1.1'>\n";
 
-    for (auto shape(imp_->shapes_.begin()), shape_end(imp_->shapes_.end());
-         shape != shape_end; ++shape)
-        (*shape)->flush(of);
+    for (auto const shape : imp_->shapes_)
+        shape->flush(of);
 
     of << "</svg>\n";
 }
@@ -334,10 +332,9 @@ void Drawer::draw(const Star & star)
 void Drawer::draw(const std::vector<ln_equ_posn> & path)
 {
     std::vector<std::vector<CanvasPoint>> ret(1);
-    for (auto i(path.begin()), i_end(path.end());
-         i != i_end; ++i)
+    for (auto const & i : path)
     {
-        auto p(imp_->projection_->project(*i));
+        auto p(imp_->projection_->project(i));
         if (! p.nan())
             ret.back().push_back(p);
         else if (! ret.back().empty())
@@ -345,13 +342,12 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
     }
 
     std::vector<BezierCurve> strips(1);
-    for (auto b(ret.cbegin()), b_end(ret.cend());
-         b != b_end; ++b)
+    for (auto const & b : ret)
     {
         if (! strips.back().empty())
             strips.push_back(BezierCurve());
 
-        auto beziered(interpolate_bezier(*b));
+        auto beziered(interpolate_bezier(b));
         auto first(beziered.cbegin()), second(first + 1);
         for (auto end(beziered.cend());
              second != end; first = second, ++second)
@@ -367,10 +363,9 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
         }
     }
 
-    for (auto i(strips.cbegin()), i_end(strips.cend());
-         i != i_end; ++i)
-        if (! i->empty())
-            imp_->shapes_.push_back(std::make_shared<svg_cbezier>(*i, "#888888", 0.1));
+    for (auto const & i : strips)
+        if (! i.empty())
+            imp_->shapes_.push_back(std::make_shared<svg_cbezier>(i, "#888888", 0.1));
 }
 
 void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
