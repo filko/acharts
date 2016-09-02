@@ -488,7 +488,7 @@ public:
     qi::rule<Iterator, section_proxy()> section;
 };
 
-Description parse_catalog_ReadMe(std::istream & is, const std::string & catalog_name)
+Description parse_catalog_ReadMe(std::istream & is, const std::string & /*catalog_name*/)
 {
     std::stringstream iss;
     iss << is.rdbuf();
@@ -497,7 +497,7 @@ Description parse_catalog_ReadMe(std::istream & is, const std::string & catalog_
 
     ReadMe_proxy t;
     auto iter(ss.cbegin());
-    bool r(qi::parse(iter, ss.cend(), grammar, t));
+    (void)qi::parse(iter, ss.cend(), grammar, t);
 
     return Description();
 }

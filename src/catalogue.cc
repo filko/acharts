@@ -37,31 +37,14 @@ public:
         return 1;
     }
 
-    int get_int(int begin, int size)
+    template <typename T>
+    T get(int begin, int size)
     {
         std::stringstream s(line_.substr(begin, size));
-        int i;
-        if (! (s >> i))
-            throw std::runtime_error("not an int");
-        return i;
-    }
-
-    short get_short(int begin, int size)
-    {
-        std::stringstream s(line_.substr(begin, size));
-        short i;
-        if (! (s >> i))
-            throw std::runtime_error("not a short");
-        return i;
-    }
-
-    double get_double(int begin, int size)
-    {
-        std::stringstream s(line_.substr(begin, size));
-        double d;
-        if (! (s >> d))
-            throw std::runtime_error("not a double");
-        return d;
+        T t;
+        if (! (s >> t))
+            throw std::runtime_error("Cannot convert " + line_.substr(begin, size));
+        return t;
     }
 };
 
@@ -95,11 +78,12 @@ void Catalogue::load()
         {
             // Bright Star Catalogue
             lnh_equ_posn hpos = {
-                { reader.get_short(75, 2), reader.get_short(77, 2), reader.get_double(79, 4) },
-                { short(reader.get_sign(83) == -1 ? 1 : 0), reader.get_short(84, 2), reader.get_short(86, 2), double(reader.get_short(88, 2)) }
+                { reader.get<unsigned short>(75, 2), reader.get<unsigned short>(77, 2), reader.get<double>(79, 4) },
+                { (unsigned short)(reader.get_sign(83) == -1 ? 1 : 0), reader.get<unsigned short>(84, 2), reader.get<unsigned short>(86, 2),
+		  double(reader.get<unsigned short>(88, 2)) }
             };
 
-            Star c(reader.get_string(4, 10), hpos, reader.get_double(102, 5));
+            Star c(reader.get_string(4, 10), hpos, reader.get<double>(102, 5));
             imp_->stars_.push_back(c);
         }
         catch (const std::runtime_error &)
