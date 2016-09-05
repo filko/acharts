@@ -329,7 +329,7 @@ void Drawer::draw(const Star & star)
 //        imp_->board << Lb::Text(-star.pos_.ra + s, star.pos_.dec, star.common_name_, Lb::Fonts::Helvetica, 3.);
 }
 
-void Drawer::draw(const std::vector<ln_equ_posn> & path)
+void Drawer::draw(const std::vector<ln_equ_posn> & path, double width)
 {
     std::vector<std::vector<CanvasPoint>> ret(1);
     for (auto const & i : path)
@@ -365,7 +365,7 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path)
 
     for (auto const & i : strips)
         if (! i.empty())
-            imp_->shapes_.push_back(std::make_shared<svg_cbezier>(i, "#888888", 0.1));
+            imp_->shapes_.push_back(std::make_shared<svg_cbezier>(i, "#888888", width));
 }
 
 void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
