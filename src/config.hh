@@ -78,7 +78,7 @@ public:
     Config(int arc, char * arv[]);
     ~Config();
 
-    std::pair<double, double> location() const;
+    const ln_lnlat_posn location() const;
     const CanvasPoint canvas_dimensions() const;
     double canvas_margin() const;
     const std::string projection_type() const;

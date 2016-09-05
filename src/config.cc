@@ -240,10 +240,10 @@ Config::~Config()
 {
 }
 
-std::pair<double, double> Config::location() const
+const ln_lnlat_posn Config::location() const
 {
-    return std::make_pair(imp_->get<angle>("core.location.latitude").val,
-                          imp_->get<angle>("core.location.longitude").val);
+    return ln_lnlat_posn{imp_->get<angle>("core.location.longitude").val,
+                         imp_->get<angle>("core.location.latitude").val};
 }
 
 const CanvasPoint Config::canvas_dimensions() const
