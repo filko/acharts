@@ -99,6 +99,7 @@ int main(int arc, char * arv[])
             drawer.draw(stringify(angle{y}, as_degree), {0., y});
         }
 
+        // ecliptic
         {
             std::vector<ln_equ_posn> path;
             double t(config.t());
@@ -110,6 +111,21 @@ int main(int arc, char * arv[])
                 path.push_back(out);
             }
             drawer.draw(path, 0.2);
+        }
+
+        // horizon
+        {
+            std::vector<ln_equ_posn> path;
+            double t(config.t());
+            ln_lnlat_posn observer(config.location());
+            for (double x(0); x < 359.9; x += 15.)
+            {
+                ln_hrz_posn in{x, 0.};
+                ln_equ_posn out;
+                ln_get_equ_from_hrz(&in, &observer, t, &out);
+                path.push_back(out);
+            }
+            drawer.draw(path, 0.3);
         }
 
         drawer.store("test-2.svg");
