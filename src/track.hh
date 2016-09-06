@@ -2,11 +2,13 @@
 #define ACHARTS_TRACK_HH 1
 
 #include "now.hh"
+#include "types.hh"
 
 struct Track
 {
     std::string name;
-    double start, end, mark_interval;
+    timestamp start, end;
+    double mark_interval;
     int interval_ticks;
 
     Track()

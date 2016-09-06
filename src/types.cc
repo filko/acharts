@@ -51,7 +51,18 @@ std::string stringify(angle a)
 std::ostream & operator<<(std::ostream & os, const timestamp & t)
 {
     auto flags(os.flags());
-    os << "Timestamp: " << std::fixed << t.val;
+    switch (t.type())
+    {
+        case timestamp::Type::real:
+            os << "Timestamp: " << std::fixed << t.val();
+            break;
+        case timestamp::Type::t:
+            os << "Timestamp: t";
+            break;
+        case timestamp::Type::now:
+            os << "Timestamp: now";
+            break;
+    }
     os.flags(flags);
     return os;
 }

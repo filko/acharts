@@ -98,6 +98,10 @@ public:
 
     bool moon() const;
     bool sun() const;
+
+private:
+    timestamp sanitize_timestamp(const timestamp & ts) const;
+    void update_timestamps();
 };
 
 #endif

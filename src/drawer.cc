@@ -368,12 +368,16 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path, double width)
             imp_->shapes_.push_back(std::make_shared<svg_cbezier>(i, "#888888", width));
 }
 
+#include <iostream>
+
 void Drawer::draw(const Track & track, const std::shared_ptr<const SolarObject> & object)
 {
     std::vector<ln_equ_posn> path;
     std::vector<CanvasPoint> cpath;
     double step(track.mark_interval / track.interval_ticks);
-    for (double t(track.start); t <= track.end; t += step)
+    std::cout << std::fixed << track.start.val() << ", " << track.end.val() << ", " << step << std::endl;
+
+    for (double t(track.start.val()); t <= track.end.val(); t += step)
     {
         auto coord(object->get_equ_coords(t));
         path.push_back(coord);

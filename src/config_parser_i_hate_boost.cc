@@ -293,7 +293,7 @@ phoenix::function<now_get_imp> now_get;
 
 template <typename Iterator>
 class timestamp_grammar
-    : public qi::grammar<Iterator, double()>
+    : public qi::grammar<Iterator, timestamp()>
 {
 public:
     timestamp_grammar()
@@ -307,17 +307,18 @@ public:
                 -(omit[space] >> int_ >> "-" >> int_ >> "-" >> int_) >>
                 -(omit[space] >> double_)
                 ) [_val = parseddate_to_juliandate(_1, _2, _3, _4, _5)]
-            | lit("now") [_val = now_get()]
+            | lit("now") [_val = timestamp::Now()]
+            | lit("t") [_val = timestamp::T()]
             ;
     }
 
-    qi::rule<Iterator, double()> start;
+    qi::rule<Iterator, timestamp()> start;
 };
 
-double parse_timestamp(const std::string & in)
+timestamp parse_timestamp(const std::string & in)
 {
     timestamp_grammar<std::string::const_iterator> pars;
-    double ret;
+    timestamp ret;
     auto begin(in.cbegin()), end(in.cend());
     bool r(parse(begin, end, pars, ret));
     if (!r or begin != end)

@@ -13,7 +13,6 @@
 #include "config_parser.hh"
 #include "exceptions.hh"
 #include "now.hh"
-#include "types.hh"
 
 struct empty_type {};
 std::ostream & operator<<(std::ostream & os, empty_type)
@@ -41,7 +40,7 @@ struct value_parser_visitor
 
     void operator()(timestamp & ts) const
     {
-        ts.val = config_parser::parse_timestamp(value_);
+        ts = config_parser::parse_timestamp(value_);
     }
 
     void operator()(std::string & s) const
@@ -145,11 +144,11 @@ struct Config::Implementation
                 if ("track.object" == path)
                     track.name = boost::get<std::string>(option);
                 else if ("track.start" == path)
-                    track.start = boost::get<timestamp>(option).val;
+                    track.start = boost::get<timestamp>(option);
                 else if ("track.end" == path)
-                    track.end = boost::get<timestamp>(option).val;
+                    track.end = boost::get<timestamp>(option);
                 else if ("track.mark-interval" == path)
-                    track.mark_interval = boost::get<timestamp>(option).val;
+                    track.mark_interval = boost::get<timestamp>(option).val();
                 else if ("track.interval-ticks" == path)
                     track.interval_ticks = boost::get<integer>(option).val;
                 else
@@ -187,8 +186,8 @@ struct Config::Implementation
     {
         for (auto const i : tree)
         {
-            if ("catalogue" == i.first || "track" == i.first)
-                continue;
+//            if ("catalogue" == i.first || "track" == i.first)
+//                continue;
 
             std::cout << '[' << i.first << ']' << std::endl;
             dump_section(&i.second);
@@ -235,10 +234,35 @@ Config::Config(int arc, char * arv[])
     config_parser::parse_config(f,
                                 [&](const std::string & s)                        { imp_->accept_section(s); },
                                 [&](const std::string & p, const std::string & v) { imp_->accept_value(p, v); });
+    update_timestamps();
+    imp_->dump();
 }
 
 Config::~Config()
 {
+}
+
+timestamp Config::sanitize_timestamp(const timestamp & ts) const
+{
+    switch (ts.type())
+    {
+        case timestamp::Type::real:
+            return ts;
+        case timestamp::Type::t:
+            return timestamp{t()};
+        case timestamp::Type::now:
+            return timestamp{Now::get_jd()};
+    }
+    throw std::logic_error("Reached end of timestamp::Type switch.");
+}
+
+void Config::update_timestamps()
+{
+    for (auto & track : imp_->tracks)
+    {
+        track->start = sanitize_timestamp(track->start);
+        track->end = sanitize_timestamp(track->end);
+    }
 }
 
 const ln_lnlat_posn Config::location() const
@@ -292,7 +316,18 @@ const std::string Config::projection_level() const
 
 double Config::t() const
 {
-    return imp_->get<timestamp>("core.t").val;
+    timestamp ts(imp_->get<timestamp>("core.t"));
+
+    switch (ts.type())
+    {
+        case timestamp::Type::real:
+            return ts.val();
+        case timestamp::Type::now:
+            return Now::get_jd();
+        case timestamp::Type::t:
+            throw ConfigError("Cannot use 't' when defining core.t");
+    }
+    throw std::logic_error("Reached end of timestamp::Type switch.");
 }
 
 const std::vector<std::string> Config::planets() const
