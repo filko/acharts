@@ -15,7 +15,8 @@ SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
 }
 
 Projection::Projection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
-    : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center)
+    : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center),
+      rotationSin_(0.), rotationCos_(1.)
 {
     if (0. == apparent_canvas_.ra)
     {
@@ -40,6 +41,13 @@ double Projection::scale_at_point(const ln_equ_posn & pos) const
     p2.ra += 0.1;
     CanvasPoint o1(this->project(pos)), o2(this->project(p2));
     return (o1.x - o2.x) * 10.;
+}
+
+void Projection::rotate_to_level(const CanvasPoint & pos)
+{
+    double angle(M_PI - std::atan2(pos.y, pos.x));
+    rotationSin_ = std::sin(angle);
+    rotationCos_ = std::cos(angle);
 }
 
 class AzimuthalEquidistantProjection
@@ -71,7 +79,8 @@ public:
         // negate x, because for svg up is down
         // negate y, because right ascention is going left to right
         return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
-                           -y * canvas_.y / apparent_canvas_.dec);
+                           -y * canvas_.y / apparent_canvas_.dec)
+            .rotate(rotationSin_, rotationCos_);
     }
 };
 

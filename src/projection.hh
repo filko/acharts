@@ -25,11 +25,13 @@ public:
     virtual ~Projection();
     virtual CanvasPoint project(const ln_equ_posn & pos) const = 0;
     virtual double scale_at_point(const ln_equ_posn & pos) const;
+    virtual void rotate_to_level(const CanvasPoint & pos);
 
 protected:
     CanvasPoint canvas_;
     SphericalCoord apparent_canvas_;
     SphericalCoord center_;
+    double rotationSin_, rotationCos_;
 };
 
 class ProjectionFactory

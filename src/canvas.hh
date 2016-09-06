@@ -55,10 +55,14 @@ struct CanvasPoint
         return sqrt(x*x + y*y);
     }
 
+    const CanvasPoint rotate(double sin, double cos) const
+    {
+        return CanvasPoint(x * cos - y * sin, x * sin + y * cos);
+    }
+
     const CanvasPoint rotate(double radians) const
     {
-        double cos(std::cos(radians)), sin(std::sin(radians));
-        return CanvasPoint(x * cos - y * sin, x * sin + y * cos);
+        return rotate(std::sin(radians), std::cos(radians));
     }
 };
 

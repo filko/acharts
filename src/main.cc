@@ -18,12 +18,28 @@ int main(int arc, char * arv[])
 
         //        return 0;
 
+        ln_lnlat_posn observer(config.location());
+        const double t(config.t());
+
         CanvasPoint canvas(config.canvas_dimensions());
         ln_equ_posn apparent_canvas(config.projection_dimensions()),
             center(config.projection_centre());
 
         std::shared_ptr<Projection> projection(ProjectionFactory::create(config.projection_type(),
                                                                          canvas, apparent_canvas, center));
+
+        if (config.projection_level() == "horizon")
+        {
+            ln_hrz_posn hor;
+            ln_get_hrz_from_equ(&center, &observer, t, &hor);
+            ln_hrz_posn hor2(hor);
+            hor2.az += 1.0;
+            ln_equ_posn equ;
+            ln_get_equ_from_hrz(&hor2, &observer, t, &equ);
+            CanvasPoint cp(equ.ra - center.ra, equ.dec - center.dec);
+
+            projection->rotate_to_level(cp);
+        }
 
         Drawer drawer(canvas, config.canvas_margin());
         drawer.set_projection(projection);
@@ -116,8 +132,6 @@ int main(int arc, char * arv[])
         // horizon
         {
             std::vector<ln_equ_posn> path;
-            double t(config.t());
-            ln_lnlat_posn observer(config.location());
             for (double x(0); x < 359.9; x += 15.)
             {
                 ln_hrz_posn in{x, 0.};

@@ -104,6 +104,7 @@ struct Config::Implementation
         add("projection.dimensions.dec", angle{0.});
         add("projection.centre.ra", angle{0.});
         add("projection.centre.dec", angle{0.});
+        add("projection.level", "none");
 
         add("planets.enable", "");
         add("planets.labels", boolean{true});
@@ -282,6 +283,11 @@ const ln_equ_posn Config::projection_dimensions() const
 {
     return ln_equ_posn{imp_->get<angle>("projection.dimensions.ra").val,
                        imp_->get<angle>("projection.dimensions.dec").val};
+}
+
+const std::string Config::projection_level() const
+{
+    return imp_->get<std::string>("projection.level");
 }
 
 double Config::t() const

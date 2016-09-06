@@ -68,6 +68,13 @@ dimensions.ra _angle_ = 45d, .dec _angle_ = 0d::
     expected from simple calculation.
 
 
+level _string_ = none
+
+    Rotate canvas before rendering so that center of image is level in
+    a given coordinates.  Currently only supported is 'horizon' and
+    'none' (the latter meaning celestial equator).
+
+
 CONFIGURATION TYPES
 -------------------
 
