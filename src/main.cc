@@ -37,7 +37,10 @@ int main(int arc, char * arv[])
             ln_equ_posn equ;
             ln_get_equ_from_hrz(&hor2, &observer, t, &equ);
             CanvasPoint cp(equ.ra - center.ra, equ.dec - center.dec);
+            if (cp.x > 180.)
+                cp.x -= 360.;
 
+            std::cout << cp.x << ", " << cp.y << std::endl;
             projection->rotate_to_level(cp);
         }
 
@@ -93,7 +96,7 @@ int main(int arc, char * arv[])
         }
         std::cout << "done." << std::endl;
 
-        for (double x(0); x < 359.9; x += 15.)
+        for (double x(0); x < 360.1; x += 15.)
         {
             std::vector<ln_equ_posn> path;
             for (double y(-88.); y < 88.1; y += 2.)
@@ -119,7 +122,7 @@ int main(int arc, char * arv[])
         {
             std::vector<ln_equ_posn> path;
             double t(config.t());
-            for (double x(0); x < 359.9; x += 15.)
+            for (double x(0); x < 360.1; x += 15.)
             {
                 ln_lnlat_posn in{x, 0.};
                 ln_equ_posn out;
@@ -132,7 +135,7 @@ int main(int arc, char * arv[])
         // horizon
         {
             std::vector<ln_equ_posn> path;
-            for (double x(0); x < 359.9; x += 15.)
+            for (double x(0); x < 360.1; x += 15.)
             {
                 ln_hrz_posn in{x, 0.};
                 ln_equ_posn out;
