@@ -122,7 +122,7 @@ int main(int arc, char * arv[])
         {
             std::vector<ln_equ_posn> path;
             double t(config.t());
-            for (double x(0); x < 360.1; x += 15.)
+            for (double x(0); x < 360.1; x += 2.)
             {
                 ln_lnlat_posn in{x, 0.};
                 ln_equ_posn out;
@@ -135,7 +135,7 @@ int main(int arc, char * arv[])
         // horizon
         {
             std::vector<ln_equ_posn> path;
-            for (double x(0); x < 360.1; x += 15.)
+            for (double x(0); x < 360.1; x += 2.)
             {
                 ln_hrz_posn in{x, 0.};
                 ln_equ_posn out;
