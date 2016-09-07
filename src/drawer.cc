@@ -322,7 +322,7 @@ void Drawer::draw(const Star & star)
         return;
 
     double s(imp_->mag2size(star.vmag_));
-    auto c(std::make_shared<svg_circle>(coord, s, black, .5 * s, white));
+    auto c(std::make_shared<svg_circle>(coord, s, black, .2 * s, white));
     imp_->shapes_.push_back(c);
 
 //    if (star.vmag_ < 4. && ! star.common_name_.empty())
