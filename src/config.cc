@@ -20,7 +20,7 @@ std::ostream & operator<<(std::ostream & os, empty_type)
     return os;
 }
 
-typedef boost::variant<empty_type, angle, timestamp, length, boolean, integer, std::string> Option;
+typedef boost::variant<empty_type, angle, timestamp, length, boolean, integer, std::string, double> Option;
 
 namespace
 {
@@ -63,6 +63,11 @@ struct value_parser_visitor
         i.val = config_parser::parse_integer(value_);
     }
 
+    void operator()(double & d) const
+    {
+        d = config_parser::parse_double(value_);
+    }
+
     void operator()(empty_type) const
     {
         throw std::runtime_error("Tried to assing to null config tree");
@@ -90,6 +95,7 @@ struct Config::Implementation
         add("core.t", timestamp{Now::get_jd()});
 
         add("catalogue.path", "");
+        add("catalogue.mag-limit", double{100});
 
         add("canvas.dimensions.x", length{297.});
         add("canvas.dimensions.y", length{210.});
@@ -128,9 +134,9 @@ struct Config::Implementation
                 Option option(i.data());
                 boost::apply_visitor(value_parser_visitor(value), option);
                 if ("catalogue.path" == path)
-                {
                     catalogues.back()->path(boost::get<std::string>(option));
-                }
+                else if ("catalogue.mag-limit" == path)
+                    catalogues.back()->mag_limit(boost::get<double>(option));
                 else
                 {
                     throw InternalError("Tried setting unknown catalogue property: " + path);

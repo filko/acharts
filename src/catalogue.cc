@@ -53,6 +53,7 @@ struct Catalogue::Implementation
     typedef std::vector<Star> Stars;
     Stars stars_;
     std::string path_;
+    double mag_limit_ = 100.0;
 };
 
 Catalogue::Catalogue()
@@ -83,7 +84,11 @@ void Catalogue::load()
 		  double(reader.get<unsigned short>(88, 2)) }
             };
 
-            Star c(reader.get_string(4, 10), hpos, reader.get<double>(102, 5));
+            double mag(reader.get<double>(102, 5));
+            if (mag > imp_->mag_limit_)
+                continue;
+
+            Star c(reader.get_string(4, 10), hpos, mag);
             imp_->stars_.push_back(c);
         }
         catch (const std::runtime_error &)
@@ -113,6 +118,16 @@ void Catalogue::path(const std::string & path)
 const std::string & Catalogue::path() const
 {
     return imp_->path_;
+}
+
+void Catalogue::mag_limit(double limit)
+{
+    imp_->mag_limit_ = limit;
+}
+
+double Catalogue::mag_limit() const
+{
+    return imp_->mag_limit_;
 }
 
 const Star & ConstStarIterator::operator*() const

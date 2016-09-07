@@ -51,6 +51,8 @@ public:
 
     void path(const std::string & path);
     const std::string & path() const;
+    void mag_limit(double limit);
+    double mag_limit() const;
 };
 
 #endif

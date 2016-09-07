@@ -416,6 +416,34 @@ int parse_integer(const std::string & in)
     return ret;
 }
 
+template <typename Iterator>
+class double_grammar
+    : public qi::grammar<Iterator, double()>
+{
+public:
+    double_grammar()
+        : double_grammar::base_type(start)
+    {
+        using namespace boost::spirit::qi;
+        start %= double_;
+    }
+
+    qi::rule<Iterator, double()> start;
+};
+
+double parse_double(const std::string & in)
+{
+    double_grammar<std::string::const_iterator> pars;
+    double ret;
+    auto begin(in.cbegin()), end(in.cend());
+    bool r(parse(begin, end, pars, ret));
+    if (!r or begin != end)
+    {
+        throw ConfigValueError("double", in);
+    }
+    return ret;
+}
+
 }
 
 BOOST_FUSION_ADAPT_ADT(

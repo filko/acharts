@@ -17,6 +17,7 @@ timestamp parse_timestamp(const std::string & in);
 double parse_length(const std::string & in);
 bool parse_boolean(const std::string & in);
 int parse_integer(const std::string & in);
+double parse_double(const std::string & in);
 
 struct Description
 {
