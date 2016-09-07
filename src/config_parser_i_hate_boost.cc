@@ -206,12 +206,16 @@ public:
         degrees = double_[_val = _1] >> -('d' >>
             -(double_[_val += _1 / 60.] >> 'm' >>
               -(double_[_val += _1/ 3600.] >> 's')));
-        start = degrees | radians;
+        hours = double_[_val = 15 * _1] >> 'h' >>
+            -(double_[_val += _1 / 4.] >> 'm' >>
+              -(double_[_val += _1 / 240. ] >> 's'));
+        start = radians | hours | degrees;
     }
 
     qi::rule<Iterator, double()> start;
     qi::rule<Iterator, double()> radians;
     qi::rule<Iterator, double()> degrees;
+    qi::rule<Iterator, double()> hours;
 };
 
 double parse_angle(const std::string & in)

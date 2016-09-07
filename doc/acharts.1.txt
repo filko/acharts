@@ -86,11 +86,14 @@ stated explicitly, but it's used below for clarity.
 angle
 ~~~~~
 
-<float>r::
-        Radians.  Eg: 3.14r.
-
 <float>[d [<float>m [<float>s]]]::
         Degrees.  Eg: 12.34, 12d34m, -2d34m56s.
+
+<float>h [<float>m [<float>s]]::
+        Hour angle, especially useful for right ascension.  Eg: 12.2h, 12h34m56s.
+
+<float>r::
+        Radians.  Eg: 3.14r.
 
 
 timestamp
