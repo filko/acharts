@@ -171,7 +171,7 @@ struct Drawer::Implementation
     double mag2size(double mag)
     {
         static const double e(exp(1));
-        return exp(-mag / e);
+        return 2.0 * exp(-mag / e) + 0.1;
     }
 
     double draw_by_magnitudo(const SolarObject & object, double jd, const CanvasPoint & coord)
