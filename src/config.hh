@@ -87,6 +87,7 @@ public:
     const std::string projection_level() const;
     double t() const;
     const std::string stylesheet() const;
+    const std::string output() const;
 
     const ConstCatalogueIterator begin_catalogues() const;
     const ConstCatalogueIterator end_catalogues() const;

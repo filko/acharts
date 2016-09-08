@@ -94,6 +94,7 @@ struct Config::Implementation
 
         add("core.t", timestamp{Now::get_jd()});
 
+        add("core.output", "output.svg");
         add("core.stylesheet", "");
 
         add("catalogue.path", "");
@@ -341,6 +342,11 @@ double Config::t() const
 const std::string Config::stylesheet() const
 {
     return imp_->get<std::string>("core.stylesheet");
+}
+
+const std::string Config::output() const
+{
+    return imp_->get<std::string>("core.output");
 }
 
 const std::vector<std::string> Config::planets() const

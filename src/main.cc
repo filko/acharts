@@ -158,7 +158,7 @@ int main(int arc, char * arv[])
             drawer.draw(path, 0.3);
         }
 
-        drawer.store("test-2.svg");
+        drawer.store(config.output().c_str());
     }
     catch (const ConfigError & e)
     {
