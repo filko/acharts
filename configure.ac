@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT(achart, 0.1, [lmi@ift.uni.wroc.pl])
+AC_INIT(achart, 0.1, [lpmichalik@googlemail.com])
 
 AM_INIT_AUTOMAKE
 

@@ -1,7 +1,7 @@
 acharts(1)
 ==========
 :Author: Łukasz P. Michalik
-:Email:  lmi@ift.uni.wroc.pl
+:Email:  lpmichalik@googlemail.com
 
 
 NAME
