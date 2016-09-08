@@ -71,7 +71,7 @@ int main(int arc, char * arv[])
 
             std::deque<Star> stars;
             std::copy(c->begin_stars(), c->end_stars(), std::back_inserter(stars));
-            drawer.draw(stars);
+            drawer.draw(stars, c->path());
         }
         std::cout << "done." << std::endl;
 

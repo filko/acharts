@@ -149,7 +149,10 @@ struct svg_group
     : public svg_shape
 {
     std::deque<std::shared_ptr<svg_shape>> children;
-    svg_group() = default;
+    const std::string id;
+    const std::string _class;
+
+    svg_group(const std::string & group_id, const std::string & _class) : id(group_id), _class(_class) { }
 
     void push_back(const std::shared_ptr<svg_shape> & shape)
     {
@@ -158,7 +161,7 @@ struct svg_group
 
     virtual void flush(std::ostream & out)
     {
-        out << "<g>\n";
+        out << "<g id=\"" << id << "\" class=\"" << _class << "\">\n";
         for (auto const & child : children)
         {
             child->flush(out);
@@ -338,12 +341,12 @@ void Drawer::store(const char * file) const
     of << "</svg>\n";
 }
 
-void Drawer::draw(const std::deque<Star> & stars)
+void Drawer::draw(const std::deque<Star> & stars, const std::string & group_id)
 {
     static const std::string black("black");
     static const std::string white("white");
 
-    std::shared_ptr<svg_group> group(std::make_shared<svg_group>());
+    std::shared_ptr<svg_group> group(std::make_shared<svg_group>(group_id, "stars"));
     for (auto const & star : stars)
     {
         CanvasPoint coord(imp_->projection_->project(star.pos_));
