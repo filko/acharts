@@ -34,16 +34,13 @@ struct svg_circle
 {
     CanvasPoint pos;
     double radius;
-    std::string fill;
     double stroke_width;
-    std::string stroke;
     std::shared_ptr<const std::string> id;
 
-    svg_circle(const CanvasPoint & pos, double radius, const std::string & fill,
-               double stroke_width, const std::string & stroke,
+    svg_circle(const CanvasPoint & pos, double radius,
+               double stroke_width,
                const std::shared_ptr<const std::string> & id)
-        : pos(pos), radius(radius), fill(fill),
-          stroke_width(stroke_width), stroke(stroke), id(id)
+        : pos(pos), radius(radius), stroke_width(stroke_width), id(id)
     {
     }
 
@@ -52,8 +49,8 @@ struct svg_circle
         out << "<circle ";
         if (id)
             out << "id=\"" << *id << "\" ";
-        out << "cx='" << pos.x << "' cy='" << pos.y << "' r='" << radius << "' fill='" << fill << "' "
-            "stroke='" << stroke << "' stroke-width='" << stroke_width << "' />\n";
+        out << "cx='" << pos.x << "' cy='" << pos.y << "' r='" << radius << "' "
+            << "stroke-width='" << stroke_width << "' />\n";
     }
 };
 
@@ -211,14 +208,14 @@ struct Drawer::Implementation
     double draw_by_magnitudo(svg_group & group, const SolarObject & object, double jd, const CanvasPoint & coord)
     {
         double s(mag2size(object.get_magnitude(jd)));
-        group.push_back(std::make_shared<svg_circle>(coord, s, "", s/10., "", std::make_shared<std::string>(object.name())));
+        group.push_back(std::make_shared<svg_circle>(coord, s, s/10., std::make_shared<std::string>(object.name())));
         return s;
     }
 
     double draw_by_sdiam(svg_group & group, const SolarObject & object, double jd, const CanvasPoint & coord, const ln_equ_posn & pos)
     {
         double s(object.get_sdiam(jd) * projection_->scale_at_point(pos) / 3600.);
-        group.push_back(std::make_shared<svg_circle>(coord, s, "", 0., "", std::make_shared<std::string>(object.name())));
+        group.push_back(std::make_shared<svg_circle>(coord, s, 0., std::make_shared<std::string>(object.name())));
         return s;
     }
 
@@ -387,7 +384,7 @@ void Drawer::draw(const std::deque<Star> & stars, const std::string & group_id)
             continue;
 
         double s(imp_->mag2size(star.vmag_));
-        group->push_back(std::make_shared<svg_circle>(coord, s, black, .2 * s, white, nullptr));
+        group->push_back(std::make_shared<svg_circle>(coord, s, .2 * s, nullptr));
     }
     imp_->shapes_.push_back(group);
 }
