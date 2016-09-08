@@ -20,4 +20,4 @@ AC_CHECK_LIB([nova], [ln_deg_to_rad], , [AC_MSG_ERROR([Required library libnova 
 ACHARTS_CXXFLAGS="-Wall -Wextra -pedantic -std=c++0x"
 AC_SUBST(ACHARTS_CXXFLAGS)
 
-AC_OUTPUT([Makefile doc/Makefile src/Makefile])
+AC_OUTPUT([Makefile doc/Makefile src/Makefile examples/Makefile])

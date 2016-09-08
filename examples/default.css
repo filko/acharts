@@ -1,0 +1,13 @@
+.stars {
+    fill: black;
+    stroke: white;
+}
+
+#planets circle {
+    fill: red;
+    stroke: blue;
+}
+
+#Sun, #Moon {
+    fill: black;
+}
