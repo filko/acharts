@@ -1,3 +1,7 @@
+#background {
+    fill: white;
+}
+
 .stars {
     fill: black;
     stroke: white;

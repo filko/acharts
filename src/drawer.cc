@@ -58,17 +58,16 @@ struct svg_rect
     : public svg_shape
 {
     CanvasPoint start, size;
-    std::string fill;
 
-    svg_rect(const CanvasPoint & start, const CanvasPoint & size, const std::string & fill)
-        : start(start), size(size), fill(fill)
+    svg_rect(const CanvasPoint & start, const CanvasPoint & size)
+        : start(start), size(size)
     {
     }
 
     virtual void flush(std::ostream & out)
     {
         out << "<rect x='" << start.x << "' y='" << start.y << "' "
-            "width='" << size.x << "' height='" << size.y << "' fill='" << fill << "' />\n";
+            "width='" << size.x << "' height='" << size.y << "' id='background'/>\n";
     }
 };
 
@@ -335,10 +334,9 @@ struct Drawer::Implementation
 Drawer::Drawer(const CanvasPoint & canvas, double canvas_margin, const std::string & style)
     : imp_(new Implementation(canvas, canvas_margin, style))
 {
-    std::string background_color("white");
     imp_->shapes_.push_back(
         std::make_shared<svg_rect>(CanvasPoint(-imp_->canvas_.x / 2., -imp_->canvas_.y / 2.),
-                                   CanvasPoint(imp_->canvas_.x, imp_->canvas_.y), background_color));
+                                   CanvasPoint(imp_->canvas_.x, imp_->canvas_.y)));
 }
 
 Drawer::~Drawer()
