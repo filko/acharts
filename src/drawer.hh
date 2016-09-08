@@ -22,7 +22,7 @@ public:
         sdiam
     };
 
-    Drawer(const CanvasPoint & canvas, double canvas_margin);
+    Drawer(const CanvasPoint & canvas, double canvas_margin, const std::string & style);
     ~Drawer();
     Drawer(const Drawer &) = delete;
     Drawer & operator=(const Drawer &) = delete;

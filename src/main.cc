@@ -1,6 +1,8 @@
 #include <libnova/libnova.h>
-#include <iostream>
 #include <deque>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 #include "config.hh"
 #include "drawer.hh"
@@ -45,7 +47,19 @@ int main(int arc, char * arv[])
             projection->rotate_to_level(cp);
         }
 
-        Drawer drawer(canvas, config.canvas_margin());
+        std::string style;
+        if (! config.stylesheet().empty())
+        {
+            std::ifstream f(config.stylesheet());
+            if (! f)
+                throw ConfigError("Stylesheet '" + config.stylesheet() + "' couldn't be opened.");
+
+            std::stringstream buf;
+            buf << f.rdbuf();
+            style = buf.str();
+        }
+
+        Drawer drawer(canvas, config.canvas_margin(), style);
         drawer.set_projection(projection);
 
         std::cout << "Loading catalogues... " << std::flush;

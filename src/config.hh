@@ -86,6 +86,7 @@ public:
     const ln_equ_posn projection_dimensions() const;
     const std::string projection_level() const;
     double t() const;
+    const std::string stylesheet() const;
 
     const ConstCatalogueIterator begin_catalogues() const;
     const ConstCatalogueIterator end_catalogues() const;

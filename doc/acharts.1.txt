@@ -40,6 +40,12 @@ location.latitude _angle_ = 0.0, .longitude _angle_ = 0.0::
     Location of the observer.  Defines horizontal coordinates.
 
 
+stylesheet = ""::
+
+    Include content of the file as an embedded CSS stylesheet.  Look
+    in examples/ for a default one.
+
+
 `[canvas]`
 ~~~~~~~~~~
 dimensions.x _size_ = 297mm, .y _size_ = 210mm::

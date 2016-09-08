@@ -174,13 +174,15 @@ struct Drawer::Implementation
     std::shared_ptr<Projection> projection_;
     double canvas_margin_;
     const CanvasPoint canvas_, canvas_start_, canvas_end_;
+    const std::string style_;
     std::deque<std::shared_ptr<svg_shape>> shapes_;
 
-    Implementation(const CanvasPoint & canvas, double canvas_margin)
+    Implementation(const CanvasPoint & canvas, double canvas_margin, const std::string & style)
         : canvas_margin_(canvas_margin),
           canvas_(canvas),
           canvas_start_(-canvas.x / 2. - canvas_margin_, -canvas.y / 2. - canvas_margin_),
-          canvas_end_(canvas.x / 2. + canvas_margin_, canvas_.y / 2. + canvas_margin_)
+          canvas_end_(canvas.x / 2. + canvas_margin_, canvas_.y / 2. + canvas_margin_),
+          style_(style)
     {
     }
 
@@ -297,8 +299,8 @@ struct Drawer::Implementation
 
 };
 
-Drawer::Drawer(const CanvasPoint & canvas, double canvas_margin)
-    : imp_(new Implementation(canvas, canvas_margin))
+Drawer::Drawer(const CanvasPoint & canvas, double canvas_margin, const std::string & style)
+    : imp_(new Implementation(canvas, canvas_margin, style))
 {
     std::string background_color("white");
     imp_->shapes_.push_back(
@@ -327,6 +329,8 @@ void Drawer::store(const char * file) const
         "viewBox='" << -imp_->canvas_.x / 2. << ' ' << -imp_->canvas_.y / 2. <<
         ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
         "xmlns='http://www.w3.org/2000/svg' version='1.1'>\n";
+
+    of << "<style type=\"text/css\">\n" << imp_->style_ << "</style>\n";
 
     for (auto const shape : imp_->shapes_)
         shape->flush(of);

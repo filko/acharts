@@ -87,12 +87,14 @@ struct Config::Implementation
     Implementation()
         : current_section("core")
     {
-        add("core.epoch", timestamp{0.});
+        add("core.epoch", timestamp{2451545.0});
 
         add("core.location.latitude", angle{0.});
         add("core.location.longitude", angle{0.});
 
         add("core.t", timestamp{Now::get_jd()});
+
+        add("core.stylesheet", "");
 
         add("catalogue.path", "");
         add("catalogue.mag-limit", double{100});
@@ -334,6 +336,11 @@ double Config::t() const
             throw ConfigError("Cannot use 't' when defining core.t");
     }
     throw std::logic_error("Reached end of timestamp::Type switch.");
+}
+
+const std::string Config::stylesheet() const
+{
+    return imp_->get<std::string>("core.stylesheet");
 }
 
 const std::vector<std::string> Config::planets() const
