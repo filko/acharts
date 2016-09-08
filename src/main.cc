@@ -1,5 +1,6 @@
 #include <libnova/libnova.h>
 #include <iostream>
+#include <deque>
 
 #include "config.hh"
 #include "drawer.hh"
@@ -54,11 +55,9 @@ int main(int arc, char * arv[])
             std::cout << c->path() << ", " << std::flush;
             c->load();
 
-            for (auto i(c->begin_stars()), i_end(c->end_stars());
-                 i != i_end ; ++i)
-            {
-                drawer.draw(*i);
-            }
+            std::deque<Star> stars;
+            std::copy(c->begin_stars(), c->end_stars(), std::back_inserter(stars));
+            drawer.draw(stars);
         }
         std::cout << "done." << std::endl;
 

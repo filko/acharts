@@ -1,6 +1,7 @@
 #ifndef GRAPH_DRAWER_HH
 #define GRAPH_DRAWER_HH 1
 
+#include <deque>
 #include <memory>
 
 #include "canvas.hh"
@@ -30,7 +31,7 @@ public:
 
     void store(const char * filename) const;
 
-    void draw(const Star & star);
+    void draw(const std::deque<Star> & stars);
     void draw(const SolarObject & object, double JD, object_rendering_type type = magnitudo, bool label = false);
     void draw(const std::vector<ln_equ_posn> & path, double width = 0.1);
     void draw(const std::string & body, const ln_equ_posn & pos);

@@ -145,6 +145,28 @@ struct svg_text
     }
 };
 
+struct svg_group
+    : public svg_shape
+{
+    std::deque<std::shared_ptr<svg_shape>> children;
+    svg_group() = default;
+
+    void push_back(const std::shared_ptr<svg_shape> & shape)
+    {
+        children.push_back(shape);
+    }
+
+    virtual void flush(std::ostream & out)
+    {
+        out << "<g>\n";
+        for (auto const & child : children)
+        {
+            child->flush(out);
+        }
+        out << "</g>\n";
+    }
+};
+
 }
 
 struct Drawer::Implementation
@@ -312,21 +334,22 @@ void Drawer::store(const char * file) const
     of << "</svg>\n";
 }
 
-void Drawer::draw(const Star & star)
+void Drawer::draw(const std::deque<Star> & stars)
 {
-    static std::string black("black");
-    static std::string white("white");
+    static const std::string black("black");
+    static const std::string white("white");
 
-    CanvasPoint coord(imp_->projection_->project(star.pos_));
-    if (! imp_->in_canvas(coord))
-        return;
+    std::shared_ptr<svg_group> group(std::make_shared<svg_group>());
+    for (auto const & star : stars)
+    {
+        CanvasPoint coord(imp_->projection_->project(star.pos_));
+        if (! imp_->in_canvas(coord))
+            continue;
 
-    double s(imp_->mag2size(star.vmag_));
-    auto c(std::make_shared<svg_circle>(coord, s, black, .2 * s, white));
-    imp_->shapes_.push_back(c);
-
-//    if (star.vmag_ < 4. && ! star.common_name_.empty())
-//        imp_->board << Lb::Text(-star.pos_.ra + s, star.pos_.dec, star.common_name_, Lb::Fonts::Helvetica, 3.);
+        double s(imp_->mag2size(star.vmag_));
+        group->push_back(std::make_shared<svg_circle>(coord, s, black, .2 * s, white));
+    }
+    imp_->shapes_.push_back(group);
 }
 
 void Drawer::draw(const std::vector<ln_equ_posn> & path, double width)

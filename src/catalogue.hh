@@ -8,6 +8,7 @@ class Star;
 class Catalogue;
 
 class ConstStarIterator
+    : public std::iterator<std::input_iterator_tag, Star>
 {
     friend class Catalogue;
 
