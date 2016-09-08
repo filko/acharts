@@ -153,6 +153,7 @@ struct svg_group
     const std::string _class;
 
     svg_group(const std::string & group_id, const std::string & _class) : id(group_id), _class(_class) { }
+    svg_group(const svg_group &) = delete;
 
     void push_back(const std::shared_ptr<svg_shape> & shape)
     {
@@ -178,14 +179,15 @@ struct Drawer::Implementation
     double canvas_margin_;
     const CanvasPoint canvas_, canvas_start_, canvas_end_;
     const std::string style_;
-    std::deque<std::shared_ptr<svg_shape>> shapes_;
+    svg_group shapes_;
 
     Implementation(const CanvasPoint & canvas, double canvas_margin, const std::string & style)
         : canvas_margin_(canvas_margin),
           canvas_(canvas),
           canvas_start_(-canvas.x / 2. - canvas_margin_, -canvas.y / 2. - canvas_margin_),
           canvas_end_(canvas.x / 2. + canvas_margin_, canvas_.y / 2. + canvas_margin_),
-          style_(style)
+          style_(style),
+          shapes_("", "")
     {
     }
 
@@ -201,18 +203,44 @@ struct Drawer::Implementation
         return 2.0 * exp(-mag / e) + 0.1;
     }
 
-    double draw_by_magnitudo(const SolarObject & object, double jd, const CanvasPoint & coord)
+    double draw_by_magnitudo(svg_group & group, const SolarObject & object, double jd, const CanvasPoint & coord)
     {
         double s(mag2size(object.get_magnitude(jd)));
-        shapes_.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
+        group.push_back(std::make_shared<svg_circle>(coord, s, "red", s/10., "blue"));
         return s;
     }
 
-    double draw_by_sdiam(const SolarObject & object, double jd, const CanvasPoint & coord, const ln_equ_posn & pos)
+    double draw_by_sdiam(svg_group & group, const SolarObject & object, double jd, const CanvasPoint & coord, const ln_equ_posn & pos)
     {
         double s(object.get_sdiam(jd) * projection_->scale_at_point(pos) / 3600.);
-        shapes_.push_back(std::make_shared<svg_circle>(coord, s, "#22222", 0., ""));
+        group.push_back(std::make_shared<svg_circle>(coord, s, "#22222", 0., ""));
         return s;
+    }
+
+    void draw(svg_group & group, const SolarObject & object, double jd, object_rendering_type type, bool label)
+    {
+        auto pos(object.get_equ_coords(jd));
+        auto coord(projection_->project(pos));
+        if (coord.nan() || ! in_canvas(coord))
+            return;
+
+        double s(0.);
+        switch (type)
+        {
+            case magnitudo:
+                s = draw_by_magnitudo(group, object, jd, coord);
+                break;
+            case sdiam:
+                s = draw_by_sdiam(group, object, jd, coord, pos);
+                break;
+        }
+
+        if (label)
+        {
+            coord.x += s;
+            coord.y += 1.;
+            group.push_back(std::make_shared<svg_text>(object.name(), coord, 4.));
+        }
     }
 
     enum {
@@ -335,7 +363,7 @@ void Drawer::store(const char * file) const
 
     of << "<style type=\"text/css\">\n" << imp_->style_ << "</style>\n";
 
-    for (auto const shape : imp_->shapes_)
+    for (auto const shape : imp_->shapes_.children)
         shape->flush(of);
 
     of << "</svg>\n";
@@ -432,28 +460,17 @@ void Drawer::draw(const std::string & body, const ln_equ_posn & pos)
     imp_->shapes_.push_back(std::make_shared<svg_text>(body, coord, 4.));
 }
 
+void Drawer::draw(const std::deque<std::shared_ptr<const SolarObject>> & objects, double jd, const std::string & group_id, object_rendering_type type, bool label)
+{
+    auto group(std::make_shared<svg_group>(group_id, "solar_system"));
+    for (auto const & object : objects)
+    {
+        imp_->draw(*group, *object, jd, type, label);
+    }
+    imp_->shapes_.push_back(group);
+}
+
 void Drawer::draw(const SolarObject & object, double jd, object_rendering_type type, bool label)
 {
-    auto pos(object.get_equ_coords(jd));
-    auto coord(imp_->projection_->project(pos));
-    if (coord.nan() || ! imp_->in_canvas(coord))
-        return;
-
-    double s(0.);
-    switch (type)
-    {
-        case magnitudo:
-            s = imp_->draw_by_magnitudo(object, jd, coord);
-            break;
-        case sdiam:
-            s = imp_->draw_by_sdiam(object, jd, coord, pos);
-            break;
-    }
-
-    if (label)
-    {
-        coord.x += s;
-        coord.y += 1.;
-        imp_->shapes_.push_back(std::make_shared<svg_text>(object.name(), coord, 4.));
-    }
+    imp_->draw(imp_->shapes_, object, jd, type, label);
 }

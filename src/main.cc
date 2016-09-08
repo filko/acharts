@@ -77,16 +77,16 @@ int main(int arc, char * arv[])
 
         std::cout << "Loading solar objects..." << std::flush;
         SolarObjectManager solar_manager;
-        std::vector<std::shared_ptr<const SolarObject>> planets;
-        auto planet_names(config.planets());
-        for (auto const & p : planet_names)
-        {
-            planets.push_back(solar_manager.get(p));
-        }
 
-        for (auto const & p : planets)
         {
-            drawer.draw(*p, config.t(), Drawer::magnitudo, config.planets_labels());
+            std::deque<std::shared_ptr<const SolarObject>> planets;
+            auto planet_names(config.planets());
+            for (auto const & p : planet_names)
+            {
+                planets.push_back(solar_manager.get(p));
+            }
+
+            drawer.draw(planets, config.t(), "planets", Drawer::magnitudo, config.planets_labels());
         }
 
         if (config.moon())
