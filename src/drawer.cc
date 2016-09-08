@@ -402,6 +402,9 @@ void Drawer::draw(const std::vector<ln_equ_posn> & path, double width)
     std::vector<BezierCurve> strips(1);
     for (auto const & b : ret)
     {
+        if (b.size() < 2)
+            continue;
+
         if (! strips.back().empty())
             strips.push_back(BezierCurve());
 
