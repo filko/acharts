@@ -12,7 +12,7 @@ acharts - Astronomical Charts - A SGV astronomical charts generator.
 SYNOPSIS
 --------
 
-*acharts* [-o output] config_file
+*acharts* config_file
 
 DESCRIPTION
 -----------
