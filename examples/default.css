@@ -1,3 +1,7 @@
+#background rect {
+    fill: white;
+}
+
 #background {
     fill: white;
 }
@@ -14,4 +18,8 @@
 
 #Sun, #Moon {
     fill: black;
+}
+
+path {
+    fill: none;
 }

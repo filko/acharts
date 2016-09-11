@@ -8,8 +8,41 @@
 #include "drawer.hh"
 #include "exceptions.hh"
 #include "projection.hh"
+#include "scene_storage.hh"
 #include "stars.hh"
+#include "svg_painter.hh"
 #include "types.hh"
+
+/*
+struct ScenePrinter
+    : boost::static_visitor<>
+{
+    void operator()(const scene::Object & o) 
+    {
+//        std::cout << '{' << o.pos.x << ',' << o.pos.y << '}';
+    }
+
+    void operator()(const scene::Group & g) 
+    {
+        std::cout << "g(" << g.id << "){";
+        for_each(g.elements.begin(), g.elements.end(),
+                 boost::apply_visitor(*this));
+        std::cout << "}";
+    }
+
+    void operator()(const scene::Rectangle &) 
+    {
+    }
+    void operator()(const scene::Line &)
+    {}
+    void operator()(const scene::Path & p)
+    {
+        std::cout << p.path.size() << ',';
+    }
+    void operator()(const scene::Text &)
+    {}
+};
+*/
 
 int main(int arc, char * arv[])
 {
@@ -62,6 +95,15 @@ int main(int arc, char * arv[])
         Drawer drawer(canvas, config.canvas_margin(), style);
         drawer.set_projection(projection);
 
+        scene::Storage scn(projection);
+
+        {
+            scene::Group gr{"rectangle", "background", {}};
+            gr.elements.push_back(scene::Rectangle{CanvasPoint(-canvas.x / 2., -canvas.y / 2.),
+                        CanvasPoint(canvas.x, canvas.y)});
+            scn.add_group(std::move(gr));
+        }
+
         std::cout << "Loading catalogues... " << std::flush;
         for (auto c(config.begin_catalogues()), c_end(config.end_catalogues());
              c != c_end; ++c)
@@ -72,6 +114,15 @@ int main(int arc, char * arv[])
             std::deque<Star> stars;
             std::copy(c->begin_stars(), c->end_stars(), std::back_inserter(stars));
             drawer.draw(stars, c->path());
+
+            {
+                std::deque<scene::Element> objs;
+                for (auto const & star : stars)
+                {
+                    objs.push_back(scene::Object{projection->project(star.pos_), star.vmag_});
+                }
+                scn.add_group(scene::Group{"catalog", c->path(), std::move(objs)});
+            }
         }
         std::cout << "done." << std::endl;
 
@@ -87,48 +138,102 @@ int main(int arc, char * arv[])
             }
 
             drawer.draw(planets, config.t(), "planets", Drawer::magnitudo, config.planets_labels());
+
+            {
+                std::deque<scene::Element> objs;
+                for (auto const & planet : planets)
+                {
+                    objs.push_back(scene::Object{projection->project(planet->get_equ_coords(t)), planet->get_magnitude(t)});
+                }
+                scn.add_group(scene::Group{"solar_system", "planets", std::move(objs)});
+            }
         }
 
         if (config.moon())
         {
-            drawer.draw(*solar_manager.get("moon"), config.t(), Drawer::sdiam, true);
+            auto const & moon{*solar_manager.get("moon")};
+            drawer.draw(moon, config.t(), Drawer::sdiam, true);
+
+            std::deque<scene::Element> obj;
+            obj.push_back(scene::Object{projection->project(moon.get_equ_coords(t)), moon.get_magnitude(t)});
+            scn.add_group(scene::Group{"solar_system", "moon",
+                        std::move(obj)
+                });
         }
 
         if (config.sun())
         {
-            drawer.draw(*solar_manager.get("sun"), config.t(), Drawer::sdiam, true);
+            auto const & sun{*solar_manager.get("sun")};
+            drawer.draw(sun, config.t(), Drawer::sdiam, true);
+
+            std::deque<scene::Element> obj;
+            obj.push_back(scene::Object{projection->project(sun.get_equ_coords(t)), sun.get_magnitude(t)});
+            scn.add_group(scene::Group{"solar_system", "sun",
+                        std::move(obj)
+                });
         }
         std::cout << "done." << std::endl;
 
-        std::cout << "Drawing tracks... " << std::flush;
-        for (auto track(config.begin_tracks()), track_end(config.end_tracks());
-             track != track_end; ++track)
         {
-            std::cout << track->name << " " << std::flush;
-            drawer.draw(*track, solar_manager.get(track->name));
-        }
-        std::cout << "done." << std::endl;
-
-        for (double x(0); x < 360.1; x += 15.)
-        {
-            std::vector<ln_equ_posn> path;
-            for (double y(-88.); y < 88.1; y += 2.)
+            std::cout << "Drawing tracks... " << std::flush;
+            scene::Group tracks{"tracks", "track_container", {}};
+            for (auto track(config.begin_tracks()), track_end(config.end_tracks());
+                 track != track_end; ++track)
             {
-                path.push_back({x, y});
+                std::cout << track->name << " " << std::flush;
+                drawer.draw(*track, solar_manager.get(track->name));
+                auto beziers(create_bezier_from_track(projection, *track, solar_manager.get(track->name)));
+                for (auto const & b : beziers)
+                {
+                    tracks.elements.push_back(scene::Path{b});
+                }
             }
-            drawer.draw(path);
-            drawer.draw(stringify(angle{x}, as_hour), {x, 0.});
+            scn.add_group(std::move(tracks));
+            std::cout << "done." << std::endl;
         }
 
-        for (double y(-60); y < 60.1; y += 10.)
         {
-            std::vector<ln_equ_posn> path;
-            for (double x(0.); x < 360.1; x += 2.)
+            scene::Group meridians{"meridians", "meridians_container", {}};
+            for (double x(0); x < 360.1; x += 15.)
             {
-                path.push_back({x, y});
+                std::vector<ln_equ_posn> path;
+                for (double y(-88.); y < 88.1; y += 2.)
+                {
+                    path.push_back({x, y});
+                }
+                drawer.draw(path);
+                drawer.draw(stringify(angle{x}, as_hour), {x, 0.});
+
+                auto bezier{create_bezier_from_path(projection, path)};
+                for (auto const b : bezier)
+                {
+                    meridians.elements.push_back(scene::Path{b});
+                }
+                meridians.elements.push_back(scene::Text{stringify(angle{x}, as_hour), {x, 0}});
             }
-            drawer.draw(path);
-            drawer.draw(stringify(angle{y}, as_degree), {0., y});
+            scn.add_group(std::move(meridians));
+        }
+
+        {
+            scene::Group parallels{"parallels", "parallels_container", {}};
+            for (double y(-60); y < 60.1; y += 10.)
+            {
+                std::vector<ln_equ_posn> path;
+                for (double x(0.); x < 360.1; x += 2.)
+                {
+                    path.push_back({x, y});
+                }
+                drawer.draw(path);
+                drawer.draw(stringify(angle{y}, as_degree), {0., y});
+
+                auto bezier{create_bezier_from_path(projection, path)};
+                for (auto const b : bezier)
+                {
+                    parallels.elements.push_back(scene::Path{b});
+                }
+                parallels.elements.push_back(scene::Text{stringify(angle{y}, as_degree), {0., y}});
+            }
+            scn.add_group(std::move(parallels));
         }
 
         // ecliptic
@@ -143,6 +248,14 @@ int main(int arc, char * arv[])
                 path.push_back(out);
             }
             drawer.draw(path, 0.2);
+
+            scene::Group ecliptic{"ecliptic", "ecliptic_container", {}};
+            auto bezier{create_bezier_from_path(projection, path)};
+            for (auto const b : bezier)
+            {
+                ecliptic.elements.push_back(scene::Path{b});
+            }
+            scn.add_group(std::move(ecliptic));
         }
 
         // horizon
@@ -156,9 +269,24 @@ int main(int arc, char * arv[])
                 path.push_back(out);
             }
             drawer.draw(path, 0.3);
+
+            scene::Group horizon{"horizon", "horizon_container", {}};
+            auto bezier{create_bezier_from_path(projection, path)};
+            for (auto const b : bezier)
+            {
+                horizon.elements.push_back(scene::Path{b});
+            }
+            scn.add_group(std::move(horizon));
         }
 
         drawer.store(config.output().c_str());
+
+        std::ofstream of("test-2.svg");
+        if (! of)
+            throw std::runtime_error("Can't open file '" + std::string("test-2.svg") + "' for writing " + std::strerror(errno));
+
+        SvgPainter painter(of, canvas, config.canvas_margin(), style);
+        boost::apply_visitor(painter, scn);
     }
     catch (const ConfigError & e)
     {

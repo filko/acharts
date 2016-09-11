@@ -93,11 +93,10 @@ struct svg_cbezier
     : public svg_shape
 {
     BezierCurve path;
-    std::string stroke;
     double width;
 
-    svg_cbezier(const BezierCurve & path, const std::string & stroke, double width)
-        : path(std::move(path)), stroke(stroke), width(width)
+    svg_cbezier(const BezierCurve & path, const std::string & , double width)
+        : path(std::move(path)), width(width)
     {
     }
 
@@ -371,9 +370,6 @@ void Drawer::store(const char * file) const
 
 void Drawer::draw(const std::deque<Star> & stars, const std::string & group_id)
 {
-    static const std::string black("black");
-    static const std::string white("white");
-
     std::shared_ptr<svg_group> group(std::make_shared<svg_group>(group_id, "stars"));
     for (auto const & star : stars)
     {
@@ -476,4 +472,46 @@ void Drawer::draw(const std::deque<std::shared_ptr<const SolarObject>> & objects
 void Drawer::draw(const SolarObject & object, double jd, object_rendering_type type, bool label)
 {
     imp_->draw(imp_->shapes_, object, jd, type, label);
+}
+
+const std::deque<BezierCurve> create_bezier_from_track(const std::shared_ptr<Projection> & projection,
+                                                       const Track & track, const std::shared_ptr<const SolarObject> & object)
+{
+    std::vector<ln_equ_posn> path;
+    double step(track.mark_interval / track.interval_ticks);
+
+    for (double t(track.start.val()); t <= track.end.val(); t += step)
+    {
+        auto coord(object->get_equ_coords(t));
+        path.push_back(coord);
+    }
+
+    return create_bezier_from_path(projection, path);
+}
+
+const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Projection> & projection,
+                                                      const std::vector<ln_equ_posn> & path)
+{
+    {
+        std::vector<std::vector<CanvasPoint>> input(1);
+        for (auto const & i : path)
+        {
+            auto p(projection->project(i));
+            if (! p.nan())
+                input.back().push_back(p);
+            else if (! input.back().empty())
+                input.push_back(std::vector<CanvasPoint>());
+        }
+
+        std::deque<BezierCurve> ret;
+        for (auto const & b : input)
+        {
+            if (b.size() < 2)
+                continue;
+
+            ret.push_back(interpolate_bezier(b));
+        }
+
+        return ret;
+    }
 }

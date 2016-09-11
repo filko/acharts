@@ -11,8 +11,10 @@ acharts_SOURCES = \
 	now.cc \
 	planet.cc \
 	projection.cc \
+	scene_storage.cc \
 	solar_object.cc \
 	stars.cc \
+	svg_painter.cc \
 	types.cc
 
 AM_CXXFLAGS = ${ACHARTS_CXXFLAGS}

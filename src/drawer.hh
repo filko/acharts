@@ -4,6 +4,7 @@
 #include <deque>
 #include <memory>
 
+#include "bezier.hh"
 #include "canvas.hh"
 #include "stars.hh"
 #include "projection.hh"
@@ -38,5 +39,11 @@ public:
     void draw(const std::string & body, const ln_equ_posn & pos);
     void draw(const Track & track, const std::shared_ptr<const SolarObject> & object);
 };
+
+const std::deque<BezierCurve> create_bezier_from_track(const std::shared_ptr<Projection> & projection,
+                                           const Track & track, const std::shared_ptr<const SolarObject> & object);
+
+const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Projection> & projection,
+                                                      const std::vector<ln_equ_posn> & path);
 
 #endif
