@@ -27,6 +27,12 @@ struct SvgPainter::Implementation
           style_(style)
     {
     }
+
+    bool in_canvas(const CanvasPoint & oc)
+    {
+        return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
+            oc.x <= canvas_end_.x && oc.y <= canvas_end_.y;
+    }
 };
 
 SvgPainter::SvgPainter(std::ostream & os, const CanvasPoint & canvas, double canvas_margin, const std::string & style)
@@ -59,6 +65,9 @@ void SvgPainter::operator()(const scene::Group & g)
 
 void SvgPainter::operator()(const scene::Object & o)
 {
+    if (!imp_->in_canvas(o.pos))
+        return;
+
     double radius{mag2size(o.mag)},
         stroke_width{0.2 * radius};
     os_ << "<circle cx='" << o.pos.x << "' cy='" << o.pos.y << "' "
