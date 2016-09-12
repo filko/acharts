@@ -193,7 +193,7 @@ int main(int arc, char * arv[])
         }
 
         {
-            scene::Group meridians{"meridians", "meridians_container", {}};
+            scene::Group meridians{"grid", "meridians", {}};
             for (double x(0); x < 360.1; x += 15.)
             {
                 std::vector<ln_equ_posn> path;
@@ -215,7 +215,7 @@ int main(int arc, char * arv[])
         }
 
         {
-            scene::Group parallels{"parallels", "parallels_container", {}};
+            scene::Group parallels{"grid", "parallels", {}};
             for (double y(-60); y < 60.1; y += 10.)
             {
                 std::vector<ln_equ_posn> path;
@@ -249,7 +249,7 @@ int main(int arc, char * arv[])
             }
             drawer.draw(path, 0.2);
 
-            scene::Group ecliptic{"ecliptic", "ecliptic_container", {}};
+            scene::Group ecliptic{"grid", "ecliptic", {}};
             auto bezier{create_bezier_from_path(projection, path)};
             for (auto const b : bezier)
             {
@@ -270,7 +270,7 @@ int main(int arc, char * arv[])
             }
             drawer.draw(path, 0.3);
 
-            scene::Group horizon{"horizon", "horizon_container", {}};
+            scene::Group horizon{"grid", "horizon", {}};
             auto bezier{create_bezier_from_path(projection, path)};
             for (auto const b : bezier)
             {
