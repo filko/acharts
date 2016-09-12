@@ -112,5 +112,8 @@ void SvgPainter::operator()(const scene::Path & p)
 
 void SvgPainter::operator()(const scene::Text & t)
 {
+    if (! imp_->in_canvas(t.pos))
+        return;
+
     os_ << "<text x='" << t.pos.x << "' y='" << t.pos.y << "'>" << t.body << "</text>\n";
 }
