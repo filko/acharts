@@ -209,7 +209,7 @@ int main(int arc, char * arv[])
                 {
                     meridians.elements.push_back(scene::Path{b});
                 }
-                meridians.elements.push_back(scene::Text{stringify(angle{x}, as_hour), {x, 0}});
+                meridians.elements.push_back(scene::Text{stringify(angle{x}, as_hour), projection->project({x, 0})});
             }
             scn.add_group(std::move(meridians));
         }
@@ -231,7 +231,7 @@ int main(int arc, char * arv[])
                 {
                     parallels.elements.push_back(scene::Path{b});
                 }
-                parallels.elements.push_back(scene::Text{stringify(angle{y}, as_degree), {0., y}});
+                parallels.elements.push_back(scene::Text{stringify(angle{y}, as_degree), projection->project({0., y})});
             }
             scn.add_group(std::move(parallels));
         }
