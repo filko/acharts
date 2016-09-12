@@ -1,3 +1,7 @@
+* {
+    fill: none;
+}
+
 #background rect {
     fill: white;
 }
@@ -6,20 +10,41 @@
     fill: white;
 }
 
-.stars {
+.catalog *, .stars * {
     fill: black;
     stroke: white;
 }
 
-#planets circle {
-    fill: red;
-    stroke: blue;
+#planets * {
+    fill: black;
+    stroke: gray;
+}
+
+#planets text {
+    fill: black;
+    stroke: none;
 }
 
 #Sun, #Moon {
     fill: black;
 }
 
-path {
-    fill: none;
+.tracks path {
+    stroke: gray;
+    stroke-width: 0.3;
+}
+
+.grid path {
+    stroke: gray;
+    stroke-width: 0.1;
+}
+
+#horizon path {
+    stroke-width: 0.3;
+}
+
+.grid text, text {
+    fill: black;
+    font-size: 1mm;
+    font-family: sans-serif;
 }
