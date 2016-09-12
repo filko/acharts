@@ -17,12 +17,16 @@
 
 #planets * {
     fill: black;
-    stroke: gray;
+    stroke: none;
 }
 
 #planets text {
     fill: black;
     stroke: none;
+}
+
+.solar_system * {
+    fill: black;
 }
 
 #Sun, #Moon {
