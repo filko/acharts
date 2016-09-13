@@ -182,10 +182,19 @@ int main(int arc, char * arv[])
             {
                 std::cout << track->name << " " << std::flush;
                 drawer.draw(*track, solar_manager.get(track->name));
-                auto beziers(create_bezier_from_track(projection, *track, solar_manager.get(track->name)));
+                auto path(create_path_from_track(projection, *track, solar_manager.get(track->name)));
+                auto beziers(create_bezier_from_path(path));
                 for (auto const & b : beziers)
                 {
                     tracks.elements.push_back(scene::Path{b});
+                }
+
+                auto blind_beziered(interpolate_bezier(path));
+                for (int i(0), i_end(blind_beziered.size());
+                     i < i_end; i += track->interval_ticks)
+                {
+                    auto p(blind_beziered[i]);
+                    tracks.elements.push_back(scene::DirectedObject{p.p, p.perpendicular});
                 }
             }
             scn.add_group(std::move(tracks));

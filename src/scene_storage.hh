@@ -17,6 +17,11 @@ struct Object
     double mag;
 };
 
+struct DirectedObject
+{
+    CanvasPoint pos, dir;
+};
+
 struct Rectangle
 {
     CanvasPoint start, size;
@@ -43,6 +48,7 @@ struct Group;
 typedef boost::variant<
     boost::recursive_wrapper<Group>,
     Object,
+    DirectedObject,
     Rectangle,
     Line,
     Path,

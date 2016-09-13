@@ -33,7 +33,7 @@
     fill: black;
 }
 
-.tracks path {
+.tracks path, .tracks line {
     stroke: gray;
     stroke-width: 0.3;
 }

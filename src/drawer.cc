@@ -474,29 +474,37 @@ void Drawer::draw(const SolarObject & object, double jd, object_rendering_type t
     imp_->draw(imp_->shapes_, object, jd, type, label);
 }
 
-const std::deque<BezierCurve> create_bezier_from_track(const std::shared_ptr<Projection> & projection,
-                                                       const Track & track, const std::shared_ptr<const SolarObject> & object)
+const std::vector<CanvasPoint> create_path_from_track(const std::shared_ptr<Projection> & projection,
+                                                      const Track & track, const std::shared_ptr<const SolarObject> & object)
 {
-    std::vector<ln_equ_posn> path;
+    std::vector<CanvasPoint> path;
     double step(track.mark_interval / track.interval_ticks);
 
     for (double t(track.start.val()); t <= track.end.val(); t += step)
     {
         auto coord(object->get_equ_coords(t));
-        path.push_back(coord);
+        path.push_back(projection->project(coord));
     }
 
-    return create_bezier_from_path(projection, path);
+    return path;
 }
 
-const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Projection> & projection,
-                                                      const std::vector<ln_equ_posn> & path)
+const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Projection> & projection, const std::vector<ln_equ_posn> & path)
+{
+    std::vector<CanvasPoint> ret;
+    for (auto const & p : path)
+    {
+        ret.push_back(projection->project(p));
+    }
+    return create_bezier_from_path(ret);
+}
+
+const std::deque<BezierCurve> create_bezier_from_path(const std::vector<CanvasPoint> & path)
 {
     {
         std::vector<std::vector<CanvasPoint>> input(1);
-        for (auto const & i : path)
+        for (auto const & p : path)
         {
-            auto p(projection->project(i));
             if (! p.nan())
                 input.back().push_back(p);
             else if (! input.back().empty())

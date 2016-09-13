@@ -159,6 +159,16 @@ void SvgPainter::operator()(const scene::Object & o)
         "r='" << radius << "' stroke-width='" << stroke_width << "' />\n";
 }
 
+void SvgPainter::operator()(const scene::DirectedObject & o)
+{
+    if (!imp_->in_canvas(o.pos))
+        return;
+
+    CanvasPoint s(o.pos - o.dir), e(o.pos + o.dir);
+    os_ << "<line x1='" << s.x << "' y1='" << s.y << "' "
+        "x2='" << e.x << "' y2='" << e.y << "'/>\n";
+}
+
 void SvgPainter::operator()(const scene::Rectangle & r)
 {
     os_ << "<rect x='" << r.start.x << "' y='" << r.start.y << "' "
