@@ -24,6 +24,13 @@ struct LabelledObject
     std::string label;
 };
 
+struct ProportionalObject
+{
+    CanvasPoint pos;
+    double radius;
+    std::string label;
+};
+
 struct DirectedObject
 {
     CanvasPoint pos, dir;
@@ -55,6 +62,7 @@ struct Group;
 typedef boost::variant<
     boost::recursive_wrapper<Group>,
     Object,
+    ProportionalObject,
     LabelledObject,
     DirectedObject,
     Rectangle,

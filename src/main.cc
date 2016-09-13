@@ -158,7 +158,9 @@ int main(int arc, char * arv[])
             drawer.draw(moon, config.t(), Drawer::sdiam, true);
 
             std::deque<scene::Element> obj;
-            obj.push_back(scene::LabelledObject{projection->project(moon.get_equ_coords(t)), moon.get_magnitude(t),
+            auto pos{moon.get_equ_coords(t)};
+            obj.push_back(scene::ProportionalObject{projection->project(pos),
+                        moon.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         moon.name()});
             scn.add_group(scene::Group{"solar_system", "moon",
                         std::move(obj)
@@ -171,7 +173,9 @@ int main(int arc, char * arv[])
             drawer.draw(sun, config.t(), Drawer::sdiam, true);
 
             std::deque<scene::Element> obj;
-            obj.push_back(scene::LabelledObject{projection->project(sun.get_equ_coords(t)), sun.get_magnitude(t),
+            auto pos{sun.get_equ_coords(t)};
+            obj.push_back(scene::ProportionalObject{projection->project(pos),
+                        sun.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         sun.name()});
             scn.add_group(scene::Group{"solar_system", "sun",
                         std::move(obj)
