@@ -159,6 +159,19 @@ void SvgPainter::operator()(const scene::Object & o)
         "r='" << radius << "' stroke-width='" << stroke_width << "' />\n";
 }
 
+void SvgPainter::operator()(const scene::LabelledObject & lo)
+{
+    if (!imp_->in_canvas(lo.pos))
+        return;
+
+    double radius{mag2size(lo.mag)},
+        stroke_width{0.2 * radius};
+    os_ << "<circle cx='" << lo.pos.x << "' cy='" << lo.pos.y << "' "
+        "r='" << radius << "' stroke-width='" << stroke_width << "' />\n"
+        "<text x='" << lo.pos.x + radius << "' y='" << lo.pos.y << "' dy='0.5ex'>"
+        << lo.label << "</text>\n";
+}
+
 void SvgPainter::operator()(const scene::DirectedObject & o)
 {
     if (!imp_->in_canvas(o.pos))

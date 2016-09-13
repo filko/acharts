@@ -20,6 +20,7 @@ public:
     SvgPainter(const SvgPainter &) = delete;
     
     void operator()(const scene::Object & o);
+    void operator()(const scene::LabelledObject & lo);
     void operator()(const scene::DirectedObject & d);
     void operator()(const scene::Group & g);
     void operator()(const scene::Rectangle & r);

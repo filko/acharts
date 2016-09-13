@@ -143,7 +143,10 @@ int main(int arc, char * arv[])
                 std::deque<scene::Element> objs;
                 for (auto const & planet : planets)
                 {
-                    objs.push_back(scene::Object{projection->project(planet->get_equ_coords(t)), planet->get_magnitude(t)});
+                    objs.push_back(
+                        scene::LabelledObject{
+                            projection->project(planet->get_equ_coords(t)), planet->get_magnitude(t),
+                                planet->name()});
                 }
                 scn.add_group(scene::Group{"solar_system", "planets", std::move(objs)});
             }
@@ -155,7 +158,8 @@ int main(int arc, char * arv[])
             drawer.draw(moon, config.t(), Drawer::sdiam, true);
 
             std::deque<scene::Element> obj;
-            obj.push_back(scene::Object{projection->project(moon.get_equ_coords(t)), moon.get_magnitude(t)});
+            obj.push_back(scene::LabelledObject{projection->project(moon.get_equ_coords(t)), moon.get_magnitude(t),
+                        moon.name()});
             scn.add_group(scene::Group{"solar_system", "moon",
                         std::move(obj)
                 });
@@ -167,7 +171,8 @@ int main(int arc, char * arv[])
             drawer.draw(sun, config.t(), Drawer::sdiam, true);
 
             std::deque<scene::Element> obj;
-            obj.push_back(scene::Object{projection->project(sun.get_equ_coords(t)), sun.get_magnitude(t)});
+            obj.push_back(scene::LabelledObject{projection->project(sun.get_equ_coords(t)), sun.get_magnitude(t),
+                        sun.name()});
             scn.add_group(scene::Group{"solar_system", "sun",
                         std::move(obj)
                 });
