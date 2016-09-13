@@ -33,6 +33,91 @@ struct SvgPainter::Implementation
         return oc.x >= canvas_start_.x && oc.y >= canvas_start_.y &&
             oc.x <= canvas_end_.x && oc.y <= canvas_end_.y;
     }
+
+    enum {
+        inside = 0, // 0000
+        left   = 1, // 0001
+        right  = 2, // 0010
+        bottom = 4, // 0100
+        top    = 8  // 1000
+    };
+
+    int Outcode(const CanvasPoint & p)
+    {
+        int code(0);
+
+        if (p.x < canvas_start_.x)
+            code |= left;
+        else if (p.x > canvas_end_.x)
+            code |= right;
+
+        if (p.y < canvas_start_.y)
+            code |= bottom;
+        else if (p.y > canvas_end_.y)
+            code |= top;
+
+        return code;
+    }
+
+    bool CohenSutherland(CanvasPoint p0, CanvasPoint p1)
+    {
+        int code0 = Outcode(p0);
+        int code1 = Outcode(p1);
+        bool ret(false);
+
+        while (true)
+        {
+            if (!(code0 | code1))
+            {
+                ret = true;
+                break;
+            }
+            else if (code0 & code1)
+            {
+                break;
+            }
+            else
+            {
+                CanvasPoint p;
+                int code = code0 ? code0 : code1;
+
+                // use formulas y = y0 + slope * (x - x0), x = x0 + (1 / slope) * (y - y0)
+                if (code & top)
+                {
+                    p.x = p0.x + (p1.x - p0.x) * (canvas_end_.y - p0.y) / (p1.y - p0.y);
+                    p.y = canvas_end_.y;
+                }
+                else if (code & bottom)
+                {
+                    p.x = p0.x + (p1.x - p0.x) * (canvas_start_.y - p0.y) / (p1.y - p0.y);
+                    p.y = canvas_start_.y;
+                }
+                else if (code & right)
+                {
+                    p.y = p0.y + (p1.y - p0.y) * (canvas_end_.x - p0.x) / (p1.x - p0.x);
+                    p.x = canvas_end_.x;
+                }
+                else if (code & left)
+                {
+                    p.y = p0.y + (p1.y - p0.y) * (canvas_start_.x - p0.x) / (p1.x - p0.x);
+                    p.x = canvas_start_.x;
+                }
+
+                if (code == code0)
+                {
+                    p0 = p;
+                    code0 = Outcode(p0);
+                }
+                else
+                {
+                    p1 = p;
+                    code1 = Outcode(p1);
+                }
+            }
+        }
+
+        return ret;
+    }
 };
 
 SvgPainter::SvgPainter(std::ostream & os, const CanvasPoint & canvas, double canvas_margin, const std::string & style)
@@ -85,7 +170,7 @@ void SvgPainter::operator()(const scene::Line &)
     throw std::runtime_error("svgPainter for line not defined!");
 }
 
-void SvgPainter::operator()(const scene::Path & p)
+void SvgPainter::operator()(const scene::Path & path)
 {
 #if 0
     // drawing ugly control points, usefull for debugging
@@ -97,17 +182,37 @@ void SvgPainter::operator()(const scene::Path & p)
     }
 #endif
 
-    os_ << "<path d='";
-    auto prev(p.path.cbegin());
-    os_ << 'M' << prev->p.x << ',' << prev->p.y << ' ';
-    for (auto next(prev + 1), i_end(p.path.cend());
-         next != i_end; prev = next, ++next)
+    std::deque<BezierCurve> visibles(1);
     {
-        os_ << 'C' << prev->cp.x << ',' << prev->cp.y << ' '
-            << next->cm.x << ',' << next->cm.y << ' '
-            << next->p.x << ',' << next->p.y << ' ';
+        for (auto first(path.path.cbegin()), second(first + 1), end(path.path.cend());
+             second != end; first = second, ++second)
+        {
+            if (imp_->CohenSutherland(first->p, second->p))
+            {
+                if (visibles.back().empty())
+                    visibles.back().push_back(*first);
+                visibles.back().push_back(*second);
+            }
+            else if (! visibles.back().empty())
+                visibles.push_back(BezierCurve{});
+        }
     }
-    os_ << "' />\n";
+    for (auto const & p : visibles)
+    {
+        if (p.empty())
+            continue;
+        os_ << "<path d='";
+        auto prev(p.cbegin());
+        os_ << 'M' << prev->p.x << ',' << prev->p.y << ' ';
+        for (auto next(prev + 1), end(p.cend());
+             next != end; prev = next, ++next)
+        {
+            os_ << 'C' << prev->cp.x << ',' << prev->cp.y << ' '
+                << next->cm.x << ',' << next->cm.y << ' '
+                << next->p.x << ',' << next->p.y << ' ';
+        }
+        os_ << "' />\n";
+    }
 }
 
 void SvgPainter::operator()(const scene::Text & t)
