@@ -11,7 +11,7 @@ acharts_SOURCES = \
 	now.cc \
 	planet.cc \
 	projection.cc \
-	scene_storage.cc \
+	scene.cc \
 	solar_object.cc \
 	stars.cc \
 	svg_painter.cc \

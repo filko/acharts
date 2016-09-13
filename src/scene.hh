@@ -81,14 +81,14 @@ struct Group
     Group(Group &&) = default;
 };
 
-class Storage
+class Scene
 {
     const std::shared_ptr<Projection> projection_;
     Group scene_;
 
 public:
-    Storage(const std::shared_ptr<Projection> & projection);
-    Storage(const Storage &) = delete;
+    Scene(const std::shared_ptr<Projection> & projection);
+    Scene(const Scene &) = delete;
 
     void add_group(Group && group);
 

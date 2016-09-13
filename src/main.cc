@@ -8,7 +8,7 @@
 #include "drawer.hh"
 #include "exceptions.hh"
 #include "projection.hh"
-#include "scene_storage.hh"
+#include "scene.hh"
 #include "solar_object.hh"
 #include "stars.hh"
 #include "svg_painter.hh"
@@ -59,7 +59,7 @@ int main(int arc, char * arv[])
             style = buf.str();
         }
 
-        scene::Storage scn(projection);
+        scene::Scene scn(projection);
 
         {
             scene::Group gr{"rectangle", "background", {}};

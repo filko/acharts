@@ -4,7 +4,7 @@
 #include <boost/variant/static_visitor.hpp>
 #include <memory>
 
-#include "scene_storage.hh"
+#include "scene.hh"
 
 class SvgPainter
     : public boost::static_visitor<>
