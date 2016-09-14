@@ -1,3 +1,5 @@
+if ACHART_MANPAGE
+
 man_MANS = \
 	acharts.1
 
@@ -6,6 +8,8 @@ acharts.1.txt.xml: acharts.1.txt
 
 acharts.1: acharts.1.txt.xml
 	xmlto man $<
+
+endif
 
 EXTRA_DIST = \
 	acharts.1.txt
