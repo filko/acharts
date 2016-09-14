@@ -1,21 +1,24 @@
 bin_PROGRAMS = acharts
 
 acharts_SOURCES = \
-	bezier.cc \
-	catalogue.cc \
-	config.cc \
-	config_parser_i_hate_boost.cc \
-	drawer.cc \
+	bezier.cc bezier.hh \
+	canvas.hh \
+	catalogue.cc catalogue.hh \
+	config.cc config.hh \
+	config_parser_i_hate_boost.cc config_parser.hh \
+	drawer.cc drawer.hh \
+	exceptions.hh \
 	main.cc \
-	moon_and_sun.cc \
-	now.cc \
-	planet.cc \
-	projection.cc \
-	scene.cc \
-	solar_object.cc \
-	stars.cc \
-	svg_painter.cc \
-	types.cc
+	moon_and_sun.cc moon_and_sun.hh \
+	now.cc now.hh \
+	planet.cc planet.hh \
+	projection.cc projection.hh \
+	scene.cc scene.hh \
+	solar_object.cc solar_object.hh \
+	stars.cc stars.hh \
+	svg_painter.cc svg_painter.hh \
+	track.hh \
+	types.cc types.hh
 
 AM_CXXFLAGS = ${ACHARTS_CXXFLAGS}
 

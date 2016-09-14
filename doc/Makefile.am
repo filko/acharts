@@ -7,4 +7,7 @@ acharts.1.txt.xml: acharts.1.txt
 acharts.1: acharts.1.txt.xml
 	xmlto man $<
 
+EXTRA_DIST = \
+	acharts.1.txt
+
 CLEANFILES = acharts.1 acharts.1.txt.xml
