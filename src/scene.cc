@@ -130,4 +130,39 @@ scene::Group build_track(
     return group;
 }
 
+scene::Group build_tick(
+    const Tick & tick,
+    const std::shared_ptr<Projection> & projection)
+{
+    scene::Group group{"tick", tick.name, {}};
+    switch (tick.plane)
+    {
+        case Plane::Parallel:
+            for (double x{tick.start.val} ; x <= tick.end.val ; x += tick.step.val)
+            {
+                std::string str;
+                if (tick.display == Tick::as_hours)
+                    str = stringify(angle{x}, as_hour);
+                else
+                    str = stringify(angle{x}, as_degree);
+
+                group.elements.push_back(scene::Text{str, projection->project({x, tick.base.val})});
+            }
+            break;
+        case Plane::Meridian:
+            for (double y{tick.start.val} ; y <= tick.end.val ; y += tick.step.val)
+            {
+                std::string str;
+                if (tick.display == Tick::as_hours)
+                    str = stringify(angle{y}, as_hour);
+                else
+                    str = stringify(angle{y}, as_degree);
+
+                group.elements.push_back(scene::Text{str, projection->project({tick.base.val, y})});
+            }
+            break;
+    }
+    return group;
+}
+
 }

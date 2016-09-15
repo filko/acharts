@@ -7,7 +7,7 @@
 
 #include "canvas.hh"
 #include "catalogue.hh"
-#include "grid.hh"
+#include "grid_and_tick.hh"
 #include "track.hh"
 
 class Config;

@@ -161,6 +161,13 @@ int main(int arc, char * arv[])
         }
         std::cout << "done." << std::endl;
 
+        std::cout << "Drawing ticks... " << std::flush;
+        for (auto tick : config.view<Tick>())
+        {
+            scn.add_group(scene::build_tick(tick, projection));
+        }
+        std::cout << "done." << std::endl;
+
         std::ofstream of(config.output().c_str());
         if (! of)
             throw std::runtime_error("Can't open file '" + config.output() + "' for writing " + std::strerror(errno));

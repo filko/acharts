@@ -18,6 +18,7 @@ acharts_SOURCES = \
 	solar_object.cc solar_object.hh \
 	stars.cc stars.hh \
 	svg_painter.cc svg_painter.hh \
+	tick.hh \
 	track.hh \
 	types.cc types.hh
 

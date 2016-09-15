@@ -6,7 +6,7 @@
 #include <libnova/ln_types.h>
 
 #include "bezier.hh"
-#include "grid.hh"
+#include "grid_and_tick.hh"
 #include "projection.hh"
 #include "track.hh"
 
@@ -114,6 +114,11 @@ scene::Group build_track(
     const std::shared_ptr<Projection> & projection,
     const SolarObjectManager & solar_manager);
 
+scene::Group build_tick(
+    const Tick & tick,
+    const std::shared_ptr<Projection> & projection);
+
 }
+
 
 #endif

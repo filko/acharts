@@ -84,6 +84,7 @@ struct Config::Implementation
     std::deque<std::shared_ptr<Catalogue>> catalogues;
     std::deque<std::shared_ptr<Track>> tracks;
     std::deque<std::shared_ptr<Grid>> grids;
+    std::deque<std::shared_ptr<Tick>> ticks;
 
     Implementation()
         : current_section("core")
@@ -133,6 +134,15 @@ struct Config::Implementation
         add("grid.end", angle{0});
         add("grid.step", angle{0});
         add("grid.density", angle{0});
+
+        add("tick.name", "");
+        add("tick.coordinates", "equatorial");
+        add("tick.plane", "");
+        add("tick.start", angle{0});
+        add("tick.end", angle{0});
+        add("tick.step", angle{0});
+        add("tick.base", angle{0});
+        add("tick.display", "as_degrees");
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -204,6 +214,45 @@ struct Config::Implementation
                 else
                     throw ConfigError("Tried setting unknown catalogue property: " + path);
             }
+            else if ("tick" == current_section)
+            {
+                Option option(i.data());
+                boost::apply_visitor(value_parser_visitor(value), option);
+                auto & tick(*ticks.back());
+                if ("tick.name" == path)
+                    tick.name = boost::get<std::string>(option);
+                else if ("tick.coordinates" == path)
+                {
+                    if ("equatorial" == boost::get<std::string>(option))
+                        tick.coordinates = Coordinates::Equatorial;
+                    else
+                        tick.coordinates = Coordinates::Horizontal;
+                }
+                else if ("tick.plane" == path)
+                {
+                    if ("parallel" == boost::get<std::string>(option))
+                        tick.plane = Plane::Parallel;
+                    else
+                        tick.plane = Plane::Meridian;
+                }
+                else if ("tick.display" == path)
+                {
+                    if ("as_hours" == boost::get<std::string>(option))
+                        tick.display = Tick::as_hours;
+                    else
+                        tick.display = Tick::as_degrees;
+                }
+                else if ("tick.start" == path)
+                    tick.start = boost::get<angle>(option);
+                else if ("tick.end" == path)
+                    tick.end = boost::get<angle>(option);
+                else if ("tick.step" == path)
+                    tick.step = boost::get<angle>(option);
+                else if ("tick.base" == path)
+                    tick.base = boost::get<angle>(option);
+                else
+                    throw ConfigError("Tried setting unknown tick property: " + path);
+            }
             else
                 boost::apply_visitor(value_parser_visitor(value), i.data());
         }
@@ -230,6 +279,8 @@ struct Config::Implementation
             tracks.push_back(std::make_shared<Track>());
         else if ("grid" == section)
             grids.push_back(std::make_shared<Grid>());
+        else if ("tick" == section)
+            ticks.push_back(std::make_shared<Tick>());
 
         current_section = section;
     }
@@ -435,6 +486,11 @@ template<> const std::shared_ptr<Grid> Config::get_collection_item(std::size_t i
     return imp_->grids[i];
 }
 
+template<> const std::shared_ptr<Tick> Config::get_collection_item(std::size_t i) const
+{
+    return imp_->ticks[i];
+}
+
 template<> const ConfigIterator<Track> Config::View<Track>::end() const
 {
     return ConfigIterator<Track>(config_, config_->imp_->tracks.size());
@@ -450,6 +506,11 @@ template<> const ConfigIterator<Grid> Config::View<Grid>::end() const
     return ConfigIterator<Grid>(config_, config_->imp_->grids.size());
 }
 
+template<> const ConfigIterator<Tick> Config::View<Tick>::end() const
+{
+    return ConfigIterator<Tick>(config_, config_->imp_->ticks.size());
+}
+
 template <typename T>
 const std::shared_ptr<T> ConfigIterator<T>::operator->() const
 {
@@ -459,3 +520,4 @@ const std::shared_ptr<T> ConfigIterator<T>::operator->() const
 template const std::shared_ptr<Track> ConfigIterator<Track>::operator->() const;
 template const std::shared_ptr<Catalogue> ConfigIterator<Catalogue>::operator->() const;
 template const std::shared_ptr<Grid> ConfigIterator<Grid>::operator->() const;
+template const std::shared_ptr<Tick> ConfigIterator<Tick>::operator->() const;
