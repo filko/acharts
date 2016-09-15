@@ -8,6 +8,7 @@ acharts_SOURCES = \
 	config_parser_i_hate_boost.cc config_parser.hh \
 	drawer.cc drawer.hh \
 	exceptions.hh \
+	grid.hh \
 	main.cc \
 	moon_and_sun.cc moon_and_sun.hh \
 	now.cc now.hh \
