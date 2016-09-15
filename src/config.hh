@@ -86,26 +86,10 @@ public:
     const std::string output() const;
 
     template <typename T>
-    struct View
-    {
-        explicit View(const Config * config)
-            : config_(config)
-        {
-        }
-
-        const ConfigIterator<T> begin() const
-        {
-            return ConfigIterator<T>(config_, 0);
-        }
-        const ConfigIterator<T> end() const;
-        const Config * config_;
-    };
+    struct View;
 
     template <typename T>
-    const View<T> view() const
-    {
-        return View<T>(this);
-    }
+    const View<T> view() const;
 
     const std::vector<std::string> planets() const;
     bool planets_labels() const;
@@ -117,5 +101,27 @@ private:
     timestamp sanitize_timestamp(const timestamp & ts) const;
     void update_timestamps();
 };
+
+template <typename T>
+struct Config::View
+{
+    explicit View(const Config * config)
+        : config_(config)
+    {
+    }
+
+    const ConfigIterator<T> begin() const
+    {
+        return ConfigIterator<T>(config_, 0);
+    }
+    const ConfigIterator<T> end() const;
+    const Config * config_;
+};
+
+template <typename T>
+const Config::View<T> Config::view() const
+{
+    return View<T>(this);
+}
 
 #endif
