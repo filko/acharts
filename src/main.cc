@@ -187,6 +187,69 @@ int main(int arc, char * arv[])
         }
 
         {
+            for (auto grid : config.view<Grid>())
+            {
+                scene::Group grid_group{"grid", grid.name, {}};
+                switch (grid.plane)
+                {
+                    case Plane::Parallel:
+                    {
+                        for (double y{grid.start.val} ; y <= grid.end.val ; y += grid.step.val)
+                        {
+                            std::vector<ln_equ_posn> path;
+                            for (double x{0} ; x < 360.1 ; x += grid.density.val)
+                            {
+                                switch (grid.coordinates)
+                                {
+                                    case Coordinates::Equatorial:
+                                        path.push_back({x, y});
+                                        break;
+                                    case Coordinates::Horizontal:
+                                        ln_hrz_posn in{x, y};
+                                        ln_equ_posn out;
+                                        ln_get_equ_from_hrz(&in, &observer, t, &out);
+                                        path.push_back(out);
+                                        break;
+                                }
+                            }
+                            auto bezier{create_bezier_from_path(projection, path)};
+                            for (auto const & b : bezier)
+                                grid_group.elements.push_back(scene::Path{b});
+                        }
+                        break;
+                    }
+                    case Plane::Meridian:
+                    {
+                        for (double x{0} ; x <= 360.1 ; x += grid.step.val)
+                        {
+                            std::vector<ln_equ_posn> path;
+                            for (double y{grid.start.val} ; y <= grid.end.val ; y += grid.density.val)
+                            {
+                                switch (grid.coordinates)
+                                {
+                                    case Coordinates::Equatorial:
+                                        path.push_back({x, y});
+                                        break;
+                                    case Coordinates::Horizontal:
+                                        ln_hrz_posn in{x, y};
+                                        ln_equ_posn out;
+                                        ln_get_equ_from_hrz(&in, &observer, t, &out);
+                                        path.push_back(out);
+                                        break;
+                                }
+                            }
+                            auto bezier{create_bezier_from_path(projection, path)};
+                            for (auto const & b : bezier)
+                                grid_group.elements.push_back(scene::Path{b});
+                        }
+                        break;
+                    }
+                }
+                scn.add_group(std::move(grid_group));
+            }
+        }
+
+        {
             scene::Group parallels{"grid", "parallels", {}};
             for (double y(-60); y < 60.1; y += 10.)
             {

@@ -83,6 +83,7 @@ struct Config::Implementation
     std::string current_section;
     std::deque<std::shared_ptr<Catalogue>> catalogues;
     std::deque<std::shared_ptr<Track>> tracks;
+    std::deque<std::shared_ptr<Grid>> grids;
 
     Implementation()
         : current_section("core")
@@ -124,6 +125,14 @@ struct Config::Implementation
         add("track.end", timestamp{Now::get_jd() + 30.});
         add("track.mark-interval", timestamp{7.0});
         add("track.interval-ticks", integer{7});
+
+        add("grid.name", "");
+        add("grid.coordinates", "equatorial");
+        add("grid.plane", "");
+        add("grid.start", angle{0});
+        add("grid.end", angle{0});
+        add("grid.step", angle{0});
+        add("grid.density", angle{0});
     }
 
     void accept_value(const std::string & path, const std::string & value)
@@ -163,6 +172,38 @@ struct Config::Implementation
                 else
                     throw InternalError("Tried setting unknown track property: " + path);
             }
+            else if ("grid" == current_section)
+            {
+                Option option(i.data());
+                boost::apply_visitor(value_parser_visitor(value), option);
+                auto & grid(*grids.back());
+                if ("grid.name" == path)
+                    grid.name = boost::get<std::string>(option);
+                else if ("grid.coordinates" == path)
+                {
+                    if ("equatorial" == boost::get<std::string>(option))
+                        grid.coordinates = Coordinates::Equatorial;
+                    else
+                        grid.coordinates = Coordinates::Horizontal;
+                }
+                else if ("grid.plane" == path)
+                {
+                    if ("parallel" == boost::get<std::string>(option))
+                        grid.plane = Plane::Parallel;
+                    else
+                        grid.plane = Plane::Meridian;
+                }
+                else if ("grid.start" == path)
+                    grid.start = boost::get<angle>(option);
+                else if ("grid.end" == path)
+                    grid.end = boost::get<angle>(option);
+                else if ("grid.step" == path)
+                    grid.step = boost::get<angle>(option);
+                else if ("grid.density" == path)
+                    grid.density = boost::get<angle>(option);
+                else
+                    throw ConfigError("Tried setting unknown catalogue property: " + path);
+            }
             else
                 boost::apply_visitor(value_parser_visitor(value), i.data());
         }
@@ -187,6 +228,8 @@ struct Config::Implementation
             catalogues.push_back(std::make_shared<Catalogue>());
         else if ("track" == section)
             tracks.push_back(std::make_shared<Track>());
+        else if ("grid" == section)
+            grids.push_back(std::make_shared<Grid>());
 
         current_section = section;
     }
@@ -387,6 +430,11 @@ template<> const std::shared_ptr<Catalogue> Config::get_collection_item(std::siz
     return imp_->catalogues[i];
 }
 
+template<> const std::shared_ptr<Grid> Config::get_collection_item(std::size_t i) const
+{
+    return imp_->grids[i];
+}
+
 template<> const ConfigIterator<Track> Config::View<Track>::end() const
 {
     return ConfigIterator<Track>(config_, config_->imp_->tracks.size());
@@ -397,6 +445,11 @@ template<> const ConfigIterator<Catalogue> Config::View<Catalogue>::end() const
     return ConfigIterator<Catalogue>(config_, config_->imp_->catalogues.size());
 }
 
+template<> const ConfigIterator<Grid> Config::View<Grid>::end() const
+{
+    return ConfigIterator<Grid>(config_, config_->imp_->grids.size());
+}
+
 template <typename T>
 const std::shared_ptr<T> ConfigIterator<T>::operator->() const
 {
@@ -405,3 +458,4 @@ const std::shared_ptr<T> ConfigIterator<T>::operator->() const
 
 template const std::shared_ptr<Track> ConfigIterator<Track>::operator->() const;
 template const std::shared_ptr<Catalogue> ConfigIterator<Catalogue>::operator->() const;
+template const std::shared_ptr<Grid> ConfigIterator<Grid>::operator->() const;

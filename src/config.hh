@@ -5,8 +5,9 @@
 #include <utility>
 #include <vector>
 
+#include "canvas.hh"
 #include "catalogue.hh"
-#include "projection.hh"
+#include "grid.hh"
 #include "track.hh"
 
 class Config;
