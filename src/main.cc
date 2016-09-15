@@ -148,168 +148,22 @@ int main(int arc, char * arv[])
             for (auto const & track : config.view<Track>())
             {
                 std::cout << track.name << " " << std::flush;
-                auto path(create_path_from_track(projection, track, solar_manager.get(track.name)));
-                auto beziers(create_bezier_from_path(path));
-                for (auto const & b : beziers)
-                {
-                    tracks.elements.push_back(scene::Path{b});
-                }
-
-                auto blind_beziered(interpolate_bezier(path));
-                for (int i(0), i_end(blind_beziered.size());
-                     i < i_end; i += track.interval_ticks)
-                {
-                    auto p(blind_beziered[i]);
-                    tracks.elements.push_back(scene::DirectedObject{p.p, p.perpendicular});
-                }
+                tracks.elements.push_back(scene::build_track(track, projection, solar_manager));
             }
             scn.add_group(std::move(tracks));
             std::cout << "done." << std::endl;
         }
 
+        std::cout << "Drawing grids... " << std::flush;
+        for (auto grid : config.view<Grid>())
         {
-            scene::Group meridians{"grid", "meridians", {}};
-            for (double x(0); x < 360.1; x += 15.)
-            {
-                std::vector<ln_equ_posn> path;
-                for (double y(-88.); y < 88.1; y += 2.)
-                {
-                    path.push_back({x, y});
-                }
-                auto bezier{create_bezier_from_path(projection, path)};
-                for (auto const b : bezier)
-                {
-                    meridians.elements.push_back(scene::Path{b});
-                }
-                meridians.elements.push_back(scene::Text{stringify(angle{x}, as_hour), projection->project({x, 0})});
-            }
-            scn.add_group(std::move(meridians));
+            scn.add_group(scene::build_grid(grid, projection, observer, t));
         }
-
-        {
-            for (auto grid : config.view<Grid>())
-            {
-                scene::Group grid_group{"grid", grid.name, {}};
-                switch (grid.plane)
-                {
-                    case Plane::Parallel:
-                    {
-                        for (double y{grid.start.val} ; y <= grid.end.val ; y += grid.step.val)
-                        {
-                            std::vector<ln_equ_posn> path;
-                            for (double x{0} ; x < 360.1 ; x += grid.density.val)
-                            {
-                                switch (grid.coordinates)
-                                {
-                                    case Coordinates::Equatorial:
-                                        path.push_back({x, y});
-                                        break;
-                                    case Coordinates::Horizontal:
-                                        ln_hrz_posn in{x, y};
-                                        ln_equ_posn out;
-                                        ln_get_equ_from_hrz(&in, &observer, t, &out);
-                                        path.push_back(out);
-                                        break;
-                                }
-                            }
-                            auto bezier{create_bezier_from_path(projection, path)};
-                            for (auto const & b : bezier)
-                                grid_group.elements.push_back(scene::Path{b});
-                        }
-                        break;
-                    }
-                    case Plane::Meridian:
-                    {
-                        for (double x{0} ; x <= 360.1 ; x += grid.step.val)
-                        {
-                            std::vector<ln_equ_posn> path;
-                            for (double y{grid.start.val} ; y <= grid.end.val ; y += grid.density.val)
-                            {
-                                switch (grid.coordinates)
-                                {
-                                    case Coordinates::Equatorial:
-                                        path.push_back({x, y});
-                                        break;
-                                    case Coordinates::Horizontal:
-                                        ln_hrz_posn in{x, y};
-                                        ln_equ_posn out;
-                                        ln_get_equ_from_hrz(&in, &observer, t, &out);
-                                        path.push_back(out);
-                                        break;
-                                }
-                            }
-                            auto bezier{create_bezier_from_path(projection, path)};
-                            for (auto const & b : bezier)
-                                grid_group.elements.push_back(scene::Path{b});
-                        }
-                        break;
-                    }
-                }
-                scn.add_group(std::move(grid_group));
-            }
-        }
-
-        {
-            scene::Group parallels{"grid", "parallels", {}};
-            for (double y(-60); y < 60.1; y += 10.)
-            {
-                std::vector<ln_equ_posn> path;
-                for (double x(0.); x < 360.1; x += 2.)
-                {
-                    path.push_back({x, y});
-                }
-                auto bezier{create_bezier_from_path(projection, path)};
-                for (auto const b : bezier)
-                {
-                    parallels.elements.push_back(scene::Path{b});
-                }
-                parallels.elements.push_back(scene::Text{stringify(angle{y}, as_degree), projection->project({0., y})});
-            }
-            scn.add_group(std::move(parallels));
-        }
-
-        // ecliptic
-        {
-            std::vector<ln_equ_posn> path;
-            double t(config.t());
-            for (double x(0); x < 360.1; x += 2.)
-            {
-                ln_lnlat_posn in{x, 0.};
-                ln_equ_posn out;
-                ln_get_equ_from_ecl(&in, t, &out);
-                path.push_back(out);
-            }
-            scene::Group ecliptic{"grid", "ecliptic", {}};
-            auto bezier{create_bezier_from_path(projection, path)};
-            for (auto const b : bezier)
-            {
-                ecliptic.elements.push_back(scene::Path{b});
-            }
-            scn.add_group(std::move(ecliptic));
-        }
-
-        // horizon
-        {
-            std::vector<ln_equ_posn> path;
-            for (double x(0); x < 360.1; x += 2.)
-            {
-                ln_hrz_posn in{x, 0.};
-                ln_equ_posn out;
-                ln_get_equ_from_hrz(&in, &observer, t, &out);
-                path.push_back(out);
-            }
-            scene::Group horizon{"grid", "horizon", {}};
-            auto bezier{create_bezier_from_path(projection, path)};
-            for (auto const b : bezier)
-            {
-                horizon.elements.push_back(scene::Path{b});
-            }
-            scn.add_group(std::move(horizon));
-        }
+        std::cout << "done." << std::endl;
 
         std::ofstream of(config.output().c_str());
         if (! of)
-            throw std::runtime_error("Can't open file '" + std::string("test-2.svg") + "' for writing " + std::strerror(errno));
+            throw std::runtime_error("Can't open file '" + config.output() + "' for writing " + std::strerror(errno));
 
         SvgPainter painter(of, canvas, config.canvas_margin(), style);
         boost::apply_visitor(painter, scn);

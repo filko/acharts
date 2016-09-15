@@ -6,7 +6,11 @@
 #include <libnova/ln_types.h>
 
 #include "bezier.hh"
+#include "grid.hh"
 #include "projection.hh"
+#include "track.hh"
+
+class SolarObjectManager;
 
 namespace scene
 {
@@ -99,6 +103,16 @@ public:
             boost::apply_visitor(v, el);
     }
 };
+
+scene::Group build_grid(
+    const Grid grid,
+    const std::shared_ptr<Projection> & projection,
+    ln_lnlat_posn observer, double t);
+
+scene::Group build_track(
+    const Track & track,
+    const std::shared_ptr<Projection> & projection,
+    const SolarObjectManager & solar_manager);
 
 }
 
