@@ -377,88 +377,31 @@ bool Config::planets_labels() const
     return imp_->get<boolean>("planets.labels").val;
 }
 
-const ConstCatalogueIterator Config::begin_catalogues() const
+template<> const std::shared_ptr<Track> Config::get_collection_item(std::size_t i) const
 {
-    return ConstCatalogueIterator(this, 0);
-}
-    
-const ConstCatalogueIterator Config::end_catalogues() const
-{
-    return ConstCatalogueIterator(this, imp_->catalogues.size());
+    return imp_->tracks[i];
 }
 
-const ConstTrackIterator Config::begin_tracks() const
+template<> const std::shared_ptr<Catalogue> Config::get_collection_item(std::size_t i) const
 {
-    return ConstTrackIterator(this, 0);
+    return imp_->catalogues[i];
 }
 
-const ConstTrackIterator Config::end_tracks() const
+template<> const ConfigIterator<Track> Config::View<Track>::end() const
 {
-    return ConstTrackIterator(this, imp_->tracks.size());
+    return ConfigIterator<Track>(config_, config_->imp_->tracks.size());
 }
 
-ConstCatalogueIterator::ConstCatalogueIterator(const Config * config, std::size_t i)
-    : config_(config),
-      index_(i)
+template<> const ConfigIterator<Catalogue> Config::View<Catalogue>::end() const
 {
+    return ConfigIterator<Catalogue>(config_, config_->imp_->catalogues.size());
 }
 
-ConstCatalogueIterator & ConstCatalogueIterator::operator++()
+template <typename T>
+const std::shared_ptr<T> ConfigIterator<T>::operator->() const
 {
-    ++index_;
-    return *this;
+    return config_->get_collection_item<T>(index_);
 }
 
-Catalogue & ConstCatalogueIterator::operator*() const
-{
-    return *config_->imp_->catalogues[index_];
-}
-
-const std::shared_ptr<Catalogue> ConstCatalogueIterator::operator->() const
-{
-    return config_->imp_->catalogues[index_];
-}
-
-bool operator==(const ConstCatalogueIterator & lhs, const ConstCatalogueIterator & rhs)
-{
-    if (lhs.config_ != rhs.config_)
-        return false;
-
-    if (lhs.index_ != rhs.index_)
-        return false;
-
-    return true;
-}
-
-ConstTrackIterator::ConstTrackIterator(const Config * config, std::size_t i)
-    : config_(config),
-      index_(i)
-{
-}
-
-ConstTrackIterator & ConstTrackIterator::operator++()
-{
-    ++index_;
-    return *this;
-}
-
-Track & ConstTrackIterator::operator*() const
-{
-    return *config_->imp_->tracks[index_];
-}
-
-const std::shared_ptr<Track> ConstTrackIterator::operator->() const
-{
-    return config_->imp_->tracks[index_];
-}
-
-bool operator==(const ConstTrackIterator & lhs, const ConstTrackIterator & rhs)
-{
-    if (lhs.config_ != rhs.config_)
-        return false;
-
-    if (lhs.index_ != rhs.index_)
-        return false;
-
-    return true;
-}
+template const std::shared_ptr<Track> ConfigIterator<Track>::operator->() const;
+template const std::shared_ptr<Catalogue> ConfigIterator<Catalogue>::operator->() const;

@@ -11,69 +11,65 @@
 
 class Config;
 
-class ConstCatalogueIterator
+template <typename T>
+class ConfigIterator
 {
-    ConstCatalogueIterator(const Config * config, std::size_t index);
+    ConfigIterator(const Config * config, std::size_t index)
+        : config_(config), index_(index)
+    {
+    }
 
     friend class Config;
 
 public:
-    ConstCatalogueIterator(const ConstCatalogueIterator & rhs) = default;
-    ConstCatalogueIterator & operator=(const ConstCatalogueIterator & rhs) = default;
+    ConfigIterator(const ConfigIterator & rhs) = default;
+    ConfigIterator & operator=(const ConfigIterator & rhs) = default;
 
-    ConstCatalogueIterator & operator++();
+    ConfigIterator & operator++()
+    {
+        ++index_;
+        return *this;
+    }
 
-    Catalogue & operator*() const;
+    const std::shared_ptr<T> operator->() const;
 
-    const std::shared_ptr<Catalogue> operator->() const;
+    T & operator*() const
+    {
+        return *(*this).operator->();
+    }
 
-    friend bool operator==(const ConstCatalogueIterator & lhs, const ConstCatalogueIterator & rhs);
+    bool operator==(const ConfigIterator & rhs) const
+    {
+        if (config_ != rhs.config_)
+            return false;
+
+        if (index_ != rhs.index_)
+            return false;
+
+        return true;
+    }
+
+    bool operator!=(const ConfigIterator & rhs) const
+    {
+        return !(*this == rhs);
+    }
 
 private:
     const Config * config_;
     std::size_t index_;
 };
-
-inline bool operator!=(const ConstCatalogueIterator & lhs, const ConstCatalogueIterator & rhs)
-{
-    return !(lhs == rhs);
-}
-
-class ConstTrackIterator
-{
-    ConstTrackIterator(const Config * config, std::size_t index);
-
-    friend class Config;
-
-public:
-    ConstTrackIterator(const ConstTrackIterator & rhs) = default;
-    ConstTrackIterator & operator=(const ConstTrackIterator & rhs) = default;
-
-    ConstTrackIterator & operator++();
-
-    Track & operator*() const;
-
-    const std::shared_ptr<Track> operator->() const;
-
-    friend bool operator==(const ConstTrackIterator & lhs, const ConstTrackIterator & rhs);
-
-private:
-    const Config * config_;
-    std::size_t index_;
-};
-
-inline bool operator!=(const ConstTrackIterator & lhs, const ConstTrackIterator & rhs)
-{
-    return !(lhs == rhs);
-}
 
 class Config
 {
     struct Implementation;
     std::unique_ptr<Implementation> imp_;
 
-    friend class ConstCatalogueIterator;
-    friend class ConstTrackIterator;
+    template <typename T>
+    friend class ConfigIterator;
+
+    template <typename T>
+    const std::shared_ptr<T> get_collection_item(std::size_t i) const;
+
 public:
     Config(int arc, char * arv[]);
     ~Config();
@@ -89,11 +85,27 @@ public:
     const std::string stylesheet() const;
     const std::string output() const;
 
-    const ConstCatalogueIterator begin_catalogues() const;
-    const ConstCatalogueIterator end_catalogues() const;
+    template <typename T>
+    struct View
+    {
+        explicit View(const Config * config)
+            : config_(config)
+        {
+        }
 
-    const ConstTrackIterator begin_tracks() const;
-    const ConstTrackIterator end_tracks() const;
+        const ConfigIterator<T> begin() const
+        {
+            return ConfigIterator<T>(config_, 0);
+        }
+        const ConfigIterator<T> end() const;
+        const Config * config_;
+    };
+
+    template <typename T>
+    const View<T> view() const
+    {
+        return View<T>(this);
+    }
 
     const std::vector<std::string> planets() const;
     bool planets_labels() const;

@@ -22,6 +22,14 @@ int main(int arc, char * arv[])
         Config config(arc, arv);
         std::cout << "done." << std::endl;
 
+        {
+            int i;
+            for (auto b : config.view<Track>())
+            {
+                i += b.interval_ticks;
+            }
+        }
+
         ln_lnlat_posn observer(config.location());
         const double t(config.t());
 
@@ -69,20 +77,19 @@ int main(int arc, char * arv[])
         }
 
         std::cout << "Loading catalogues... " << std::flush;
-        for (auto c(config.begin_catalogues()), c_end(config.end_catalogues());
-             c != c_end; ++c)
+        for (auto & c : config.view<Catalogue>())
         {
-            std::cout << c->path() << ", " << std::flush;
-            c->load();
+            std::cout << c.path() << ", " << std::flush;
+            c.load();
 
             std::deque<Star> stars;
-            std::copy(c->begin_stars(), c->end_stars(), std::back_inserter(stars));
+            std::copy(c.begin_stars(), c.end_stars(), std::back_inserter(stars));
             std::deque<scene::Element> objs;
             for (auto const & star : stars)
             {
                 objs.push_back(scene::Object{projection->project(star.pos_), star.vmag_});
             }
-            scn.add_group(scene::Group{"catalog", c->path(), std::move(objs)});
+            scn.add_group(scene::Group{"catalog", c.path(), std::move(objs)});
         }
         std::cout << "done." << std::endl;
 
@@ -138,11 +145,10 @@ int main(int arc, char * arv[])
         {
             std::cout << "Drawing tracks... " << std::flush;
             scene::Group tracks{"tracks", "track_container", {}};
-            for (auto track(config.begin_tracks()), track_end(config.end_tracks());
-                 track != track_end; ++track)
+            for (auto const & track : config.view<Track>())
             {
-                std::cout << track->name << " " << std::flush;
-                auto path(create_path_from_track(projection, *track, solar_manager.get(track->name)));
+                std::cout << track.name << " " << std::flush;
+                auto path(create_path_from_track(projection, track, solar_manager.get(track.name)));
                 auto beziers(create_bezier_from_path(path));
                 for (auto const & b : beziers)
                 {
@@ -151,7 +157,7 @@ int main(int arc, char * arv[])
 
                 auto blind_beziered(interpolate_bezier(path));
                 for (int i(0), i_end(blind_beziered.size());
-                     i < i_end; i += track->interval_ticks)
+                     i < i_end; i += track.interval_ticks)
                 {
                     auto p(blind_beziered[i]);
                     tracks.elements.push_back(scene::DirectedObject{p.p, p.perpendicular});
