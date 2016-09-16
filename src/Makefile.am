@@ -4,11 +4,12 @@ acharts_SOURCES = \
 	bezier.cc bezier.hh \
 	canvas.hh \
 	catalogue.cc catalogue.hh \
+	catalogue_description.cc catalogue_description.hh \
 	config.cc config.hh \
 	config_parser_i_hate_boost.cc config_parser.hh \
 	drawer.cc drawer.hh \
 	exceptions.hh \
-	grid.hh \
+	grid_and_tick.hh \
 	main.cc \
 	moon_and_sun.cc moon_and_sun.hh \
 	now.cc now.hh \
@@ -16,9 +17,8 @@ acharts_SOURCES = \
 	projection.cc projection.hh \
 	scene.cc scene.hh \
 	solar_object.cc solar_object.hh \
-	stars.cc stars.hh \
+	stars.hh \
 	svg_painter.cc svg_painter.hh \
-	tick.hh \
 	track.hh \
 	types.cc types.hh
 

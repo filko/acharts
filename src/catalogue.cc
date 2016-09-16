@@ -5,48 +5,8 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "catalogue_description.hh"
 #include "stars.hh"
-
-class CatalogReader
-{
-    std::istream & stream_;
-    typedef std::string Line;
-    Line line_;
-
-public:
-    CatalogReader(std::istream & stream)
-        : stream_(stream)
-    {
-    }
-
-    bool next()
-    {
-        return bool(std::getline(stream_, line_));
-    }
-
-    std::string get_string(int begin, int size)
-    {
-        return boost::algorithm::trim_copy(line_.substr(begin, size));
-    }
-
-    int get_sign(int begin)
-    {
-        if ("-" == line_.substr(begin, 1))
-            return -1;
-
-        return 1;
-    }
-
-    template <typename T>
-    T get(int begin, int size)
-    {
-        std::stringstream s(line_.substr(begin, size));
-        T t;
-        if (! (s >> t))
-            throw std::runtime_error("Cannot convert " + line_.substr(begin, size));
-        return t;
-    }
-};
 
 struct Catalogue::Implementation
 { 
@@ -71,24 +31,15 @@ void Catalogue::load()
     if (! file)
         throw std::runtime_error("Can't open catalog!");
 
-    CatalogReader reader(file);
-
-    while (reader.next())
+    std::string line;
+    while (std::getline(file, line))
     {
         try
         {
-            // Bright Star Catalogue
-            lnh_equ_posn hpos = {
-                { reader.get<unsigned short>(75, 2), reader.get<unsigned short>(77, 2), reader.get<double>(79, 4) },
-                { (unsigned short)(reader.get_sign(83) == -1 ? 1 : 0), reader.get<unsigned short>(84, 2), reader.get<unsigned short>(86, 2),
-		  double(reader.get<unsigned short>(88, 2)) }
-            };
-
-            double mag(reader.get<double>(102, 5));
-            if (mag > imp_->mag_limit_)
+            Star c{parse_line_into_star(descriptions, line)};
+            if (c.vmag_ > imp_->mag_limit_)
                 continue;
 
-            Star c(reader.get_string(4, 10), hpos, mag);
             imp_->stars_.push_back(c);
         }
         catch (const std::runtime_error &)

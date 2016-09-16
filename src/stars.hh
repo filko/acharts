@@ -12,8 +12,10 @@ struct Star
     double vmag_;
 
     Star(const std::string & cname,
-         lnh_equ_posn & hpos,
-         double vm);
+         const ln_equ_posn & pos,
+         double vm)
+        : common_name_(cname), pos_(pos), vmag_(vm)
+    { }
 
     struct by_mag
     {
