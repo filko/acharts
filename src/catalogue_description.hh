@@ -19,11 +19,16 @@ struct CatalogParsingDescription
     {
         std::size_t start, len;
         Field field;
+
+        Entity() = default;
+        Entity(int s, int l, Field f)
+            : start(s), len(l), field(f)
+        { }
     };
     std::vector<Entity> descriptions;
 };
 
-const Star parse_line_into_star(const CatalogParsingDescription description, const std::string & line);
+const Star parse_line_into_star(const CatalogParsingDescription & description, const std::string & line);
 
 extern CatalogParsingDescription descriptions;
 

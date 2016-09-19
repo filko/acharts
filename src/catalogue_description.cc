@@ -18,7 +18,7 @@ double parse_sign(const std::string & in)
     return +1;
 }
 
-const Star parse_line_into_star(const CatalogParsingDescription description, const std::string & line)
+const Star parse_line_into_star(const CatalogParsingDescription & description, const std::string & line)
 {
     ln_equ_posn pos{};
     std::string name;

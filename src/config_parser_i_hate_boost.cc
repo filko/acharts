@@ -5,7 +5,12 @@
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
 #include <boost/fusion/include/std_pair.hpp>
+#include <boost/spirit/include/phoenix_container.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/fusion/include/push_back.hpp>
+#include <boost/fusion/include/std_tuple.hpp>
+#include <boost/phoenix/fusion/at.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_function.hpp>
 #include <boost/spirit/include/phoenix_object.hpp>
@@ -15,6 +20,7 @@
 #include <libnova/julian_day.h>
 #include <libnova/ln_types.h>
 
+#include "catalogue_description.hh"
 #include "exceptions.hh"
 #include "now.hh"
 
@@ -35,6 +41,7 @@ typedef boost::variant<std::string, pair_type> config_variant;
 namespace config_parser
 {
 
+namespace fusion = boost::fusion;
 namespace phoenix = boost::phoenix;
 namespace spirit = boost::spirit;
 namespace ascii = spirit::ascii;
@@ -51,9 +58,11 @@ using spirit::_2;
 using spirit::_3;
 using spirit::_4;
 using spirit::_val;
+using spirit::as_string;
 using spirit::double_;
 using spirit::eoi;
 using spirit::eol;
+using spirit::int_;
 using spirit::lexeme;
 using spirit::lit;
 using spirit::omit;
@@ -444,6 +453,81 @@ double parse_double(const std::string & in)
     return ret;
 }
 
+struct string_to_field_imp
+{
+    typedef CatalogParsingDescription::Field result_type;
+
+    result_type operator()(const std::string & in) const
+    {
+#define CF CatalogParsingDescription::Field
+        if ("Name" == in)
+            return CF::Name;
+        else if ("RAh" == in)
+            return CF::RAh;
+        else if ("RAm" == in)
+            return CF::RAm;
+        else if ("RAs" == in)
+            return CF::RAs;
+        else if ("DE-" == in)
+            return CF::DE_;
+        else if ("DEd" == in)
+            return CF::DEd;
+        else if ("DEm" == in)
+            return CF::DEm;
+        else if ("DEs" == in)
+            return CF::DEs;
+        else if ("Vmag" == in)
+            return CF::Vmag;
+        else
+            throw ConfigError("Unknown catalogue description field: " + in);
+#undef CF
+    }
+};
+phoenix::function<string_to_field_imp> string_to_field;
+
+template <typename Iterator>
+struct catalogue_description_grammar
+    : qi::grammar<Iterator, std::vector<CatalogParsingDescription::Entity>(), ascii::space_type>
+{
+    catalogue_description_grammar()
+        : catalogue_description_grammar::base_type(start)
+    {
+        using boost::phoenix::at_c;
+
+        range = (int_ >> -(lit('-') >> int_))[
+            _val = phoenix::construct<std::pair<int, int>>(_1, phoenix::if_else(_2, *_2 - _1 + 1, 1))
+            ];
+        field = as_string[lexeme[+char_("A-Za-z-")]][_val = string_to_field(_1)];
+        element = (range >> field)[
+            _val = phoenix::construct<CatalogParsingDescription::Entity>(at_c<0>(_1), at_c<1>(_1), _2)
+            ];
+        start = element >> *(lit(';') >> element) >> -lit(';');
+
+#ifdef BOOST_SPIRIT_DEBUG
+        BOOST_SPIRIT_DEBUG_NODE(start);
+        BOOST_SPIRIT_DEBUG_NODE(element);
+        BOOST_SPIRIT_DEBUG_NODE(range);
+        BOOST_SPIRIT_DEBUG_NODE(field);
+#endif
+    }
+
+    qi::rule<Iterator, std::vector<CatalogParsingDescription::Entity>(), ascii::space_type> start;
+    qi::rule<Iterator, CatalogParsingDescription::Entity(), ascii::space_type> element;
+    qi::rule<Iterator, std::tuple<int, int>(), ascii::space_type> range;
+    qi::rule<Iterator, CatalogParsingDescription::Field(), ascii::space_type> field;
+};
+
+CatalogParsingDescription parse_catalogue_description(const std::string & in)
+{
+    CatalogParsingDescription desc;
+    catalogue_description_grammar<std::string::const_iterator> grammar;
+    std::string::const_iterator begin(in.begin()), end(in.end());
+    bool r(qi::phrase_parse(begin, end, grammar, ascii::space, desc.descriptions));
+    if (! r or begin != end)
+        throw ConfigError("Parsing catalogue description failed.");
+    return desc;
+}
+
 }
 
 BOOST_FUSION_ADAPT_ADT(
@@ -473,6 +557,18 @@ struct push_back_container<config_parser::parser_proxy, config_variant>
         os << v;
         return os;
     }
+
+std::ostream & operator<<(std::ostream & os, const CatalogParsingDescription::Entity & e)
+{
+    os << "Ent: s " << e.start << " l " << e.len << " e " << int(e.field);
+    return os;
+}
+
+std::ostream & operator<<(std::ostream & os, const CatalogParsingDescription::Field & f)
+{
+    os << int(f);
+    return os;
+}
 
 #endif
 

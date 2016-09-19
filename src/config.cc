@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "config_parser.hh"
+#include "catalogue_description.hh"
 #include "exceptions.hh"
 #include "now.hh"
 
@@ -101,6 +102,7 @@ struct Config::Implementation
 
         add("catalogue.path", "");
         add("catalogue.mag-limit", double{100});
+        add("catalogue.pattern", "5-14 Name; 76-77 RAh; 78-79 RAm; 80-83 RAs; 84 DE-; 85-86 DEd; 87-88 DEm; 89-90 DEs; 103-107 Vmag");
 
         add("canvas.dimensions.x", length{297.});
         add("canvas.dimensions.y", length{210.});
@@ -159,6 +161,8 @@ struct Config::Implementation
                     catalogues.back()->path(boost::get<std::string>(option));
                 else if ("catalogue.mag-limit" == path)
                     catalogues.back()->mag_limit(boost::get<double>(option));
+                else if ("catalogue.pattern" == path)
+                    catalogues.back()->description(config_parser::parse_catalogue_description(boost::get<std::string>(option)));
                 else
                 {
                     throw InternalError("Tried setting unknown catalogue property: " + path);

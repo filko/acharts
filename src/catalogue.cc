@@ -6,14 +6,21 @@
 #include <stdexcept>
 
 #include "catalogue_description.hh"
+#include "config_parser.hh"
 #include "stars.hh"
 
 struct Catalogue::Implementation
-{ 
+{
     typedef std::vector<Star> Stars;
     Stars stars_;
     std::string path_;
     double mag_limit_ = 100.0;
+    CatalogParsingDescription description;
+
+    Implementation()
+        : description(config_parser::parse_catalogue_description(
+                          "5-14 Name; 76-77 RAh; 78-79 RAm; 80-83 RAs; 84 DE-; 85-86 DEd; 87-88 DEm; 89-90 DEs; 103-107 Vmag"))
+    { }
 };
 
 Catalogue::Catalogue()
@@ -36,7 +43,7 @@ void Catalogue::load()
     {
         try
         {
-            Star c{parse_line_into_star(descriptions, line)};
+            Star c{parse_line_into_star(imp_->description, line)};
             if (c.vmag_ > imp_->mag_limit_)
                 continue;
 
@@ -79,6 +86,11 @@ void Catalogue::mag_limit(double limit)
 double Catalogue::mag_limit() const
 {
     return imp_->mag_limit_;
+}
+
+void Catalogue::description(const CatalogParsingDescription & description)
+{
+    imp_->description = description;
 }
 
 const Star & ConstStarIterator::operator*() const

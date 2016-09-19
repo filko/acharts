@@ -6,6 +6,7 @@
 
 class Star;
 class Catalogue;
+class CatalogParsingDescription;
 
 class ConstStarIterator
     : public std::iterator<std::input_iterator_tag, Star>
@@ -54,6 +55,7 @@ public:
     const std::string & path() const;
     void mag_limit(double limit);
     double mag_limit() const;
+    void description(const CatalogParsingDescription &);
 };
 
 #endif

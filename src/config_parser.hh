@@ -5,6 +5,8 @@
 
 #include "types.hh"
 
+class CatalogParsingDescription;
+
 namespace config_parser
 {
 
@@ -18,6 +20,8 @@ double parse_length(const std::string & in);
 bool parse_boolean(const std::string & in);
 int parse_integer(const std::string & in);
 double parse_double(const std::string & in);
+
+CatalogParsingDescription parse_catalogue_description(const std::string & in);
 
 }
 
