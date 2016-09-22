@@ -10,7 +10,9 @@ acharts_SOURCES = \
 	drawer.cc drawer.hh \
 	exceptions.hh \
 	grid_and_tick.hh \
+	gzstream.cc gzstream.hh \
 	main.cc \
+	magic.cc magic.hh \
 	moon_and_sun.cc moon_and_sun.hh \
 	now.cc now.hh \
 	planet.cc planet.hh \

@@ -7,6 +7,7 @@
 
 #include "catalogue_description.hh"
 #include "config_parser.hh"
+#include "magic.hh"
 #include "stars.hh"
 
 struct Catalogue::Implementation
@@ -32,18 +33,20 @@ Catalogue::~Catalogue()
 {
 }
 
-void Catalogue::load()
+std::size_t Catalogue::load()
 {
-    std::ifstream file(imp_->path_.c_str());
+    std::unique_ptr<std::istream> file(open_file_with_magic(imp_->path_.c_str()));
     if (! file)
         throw std::runtime_error("Can't open catalog!");
 
     std::string line;
-    while (std::getline(file, line))
+    std::size_t count{0};
+    while (std::getline(*file, line))
     {
         try
         {
             Star c{parse_line_into_star(imp_->description, line)};
+            ++count;
             if (c.vmag_ > imp_->mag_limit_)
                 continue;
 
@@ -56,6 +59,7 @@ void Catalogue::load()
     }
 
     std::sort(imp_->stars_.begin(), imp_->stars_.end(), Star::by_mag());
+    return count;
 }
 
 const ConstStarIterator Catalogue::begin_stars() const

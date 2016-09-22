@@ -16,6 +16,7 @@ fi
 AM_CONDITIONAL(ACHART_MANPAGE, [test "x$HAVE_ASCIIDOC" = xyes -a "x$HAVE_XMLTO" = xyes])
 
 AC_CHECK_LIB([nova], [ln_deg_to_rad], , [AC_MSG_ERROR([Required library libnova not found!])])
+AC_CHECK_LIB([z], [inflateInit2_], , [AC_MSG_ERROR([zlib not found!])])
 
 ACHARTS_CXXFLAGS="-Wall -Wextra -pedantic -std=c++11"
 AC_SUBST(ACHARTS_CXXFLAGS)

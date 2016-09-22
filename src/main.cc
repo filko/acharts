@@ -79,8 +79,9 @@ int main(int arc, char * arv[])
         std::cout << "Loading catalogues... " << std::flush;
         for (auto & c : config.view<Catalogue>())
         {
-            std::cout << c.path() << ", " << std::flush;
-            c.load();
+            std::cout << c.path() << std::flush;
+            auto count{c.load()};
+            std::cout << "(" << count << "), " << std::flush;
 
             std::deque<Star> stars;
             std::copy(c.begin_stars(), c.end_stars(), std::back_inserter(stars));

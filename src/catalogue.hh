@@ -46,7 +46,7 @@ public:
     Catalogue(const Catalogue &) = delete;
     Catalogue & operator=(const Catalogue &) = delete;
 
-    void load();
+    std::size_t load();
 
     const ConstStarIterator begin_stars() const;
     const ConstStarIterator end_stars() const;
