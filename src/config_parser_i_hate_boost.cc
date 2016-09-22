@@ -4,18 +4,15 @@
 
 #define BOOST_SPIRIT_USE_PHOENIX_V3 1
 
+#include <cmath>
 #include <boost/fusion/include/std_pair.hpp>
-#include <boost/spirit/include/phoenix_container.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
-#include <boost/fusion/include/adapt_struct.hpp>
-#include <boost/fusion/include/push_back.hpp>
-#include <boost/fusion/include/std_tuple.hpp>
 #include <boost/phoenix/fusion/at.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_function.hpp>
-#include <boost/spirit/include/phoenix_object.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/phoenix/object/construct.hpp>
+#include <boost/phoenix/operator.hpp>
 #include <boost/spirit/include/support_line_pos_iterator.hpp>
+#include <boost/spirit/include/qi_auxiliary.hpp>
+#include <boost/spirit/include/qi_core.hpp>
 #include <boost/variant.hpp>
 #include <libnova/julian_day.h>
 #include <libnova/ln_types.h>
@@ -57,6 +54,7 @@ using spirit::_1;
 using spirit::_2;
 using spirit::_3;
 using spirit::_4;
+using spirit::_5;
 using spirit::_val;
 using spirit::as_string;
 using spirit::double_;
@@ -201,7 +199,7 @@ void parse_config(std::istream & is, const SectionCallback & scal, const ValueCa
     }
 }
 
-const double rad2deg(45. / atan(1.));
+const double rad2deg(45. / std::atan(1.));
 
 template <typename Iterator>
 class angle_grammar
@@ -513,7 +511,7 @@ struct catalogue_description_grammar
 
     qi::rule<Iterator, std::vector<CatalogParsingDescription::Entity>(), ascii::space_type> start;
     qi::rule<Iterator, CatalogParsingDescription::Entity(), ascii::space_type> element;
-    qi::rule<Iterator, std::tuple<int, int>(), ascii::space_type> range;
+    qi::rule<Iterator, std::pair<int, int>(), ascii::space_type> range;
     qi::rule<Iterator, CatalogParsingDescription::Field(), ascii::space_type> field;
 };
 
@@ -537,16 +535,6 @@ BOOST_FUSION_ADAPT_ADT(
 
 namespace boost { namespace spirit { namespace traits
 {
-
-template <>
-struct push_back_container<config_parser::parser_proxy, config_variant>
-{
-    static bool call(config_parser::parser_proxy & t, const config_variant & val)
-    {
-        t.push_back(val);
-        return true;
-    }
-};
 
 #ifdef BOOST_SPIRIT_DEBUG
     // SPIRIT_DEBUG doesn't work otherwise

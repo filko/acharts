@@ -1,12 +1,12 @@
 bin_PROGRAMS = acharts
 
 acharts_SOURCES = \
+	config_parser_i_hate_boost.cc config_parser.hh \
 	bezier.cc bezier.hh \
 	canvas.hh \
 	catalogue.cc catalogue.hh \
 	catalogue_description.cc catalogue_description.hh \
 	config.cc config.hh \
-	config_parser_i_hate_boost.cc config_parser.hh \
 	drawer.cc drawer.hh \
 	exceptions.hh \
 	grid_and_tick.hh \
