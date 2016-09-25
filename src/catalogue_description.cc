@@ -28,40 +28,47 @@ const Star parse_line_into_star(const CatalogParsingDescription & description, c
 
     for (auto const & desc : description.descriptions)
     {
-        std::string part{line.substr(desc.start - 1, desc.len)};
+        try
+        {
+            std::string part{line.substr(desc.start - 1, desc.len)};
 
 #define CF CatalogParsingDescription::Field
-        switch (desc.field)
-        {
-            case CF::Name:
-                name = part;
-                break;
-            case CF::RAh:
-                pos.ra += 15.0 * parse_double(part);
-                break;
-            case CF::RAm:
-                pos.ra += parse_double(part) / 4.;
-                break;
-            case CF::RAs:
-                pos.ra += parse_double(part) / 240.;
-                break;
-            case CF::DE_:
-                dec_sign = parse_sign(part);
-                break;
-            case CF::DEd:
-                pos.dec += parse_double(part);
-                break;
-            case CF::DEm:
-                pos.dec += parse_double(part) / 60.;
-                break;
-            case CF::DEs:
-                pos.dec += parse_double(part) / 3600.;
-                break;
-            case CF::Vmag:
-                vmag = parse_double(part);
-                break;
-        }
+            switch (desc.field)
+            {
+                case CF::Name:
+                    name = part;
+                    break;
+                case CF::RAh:
+                    pos.ra += 15.0 * parse_double(part);
+                    break;
+                case CF::RAm:
+                    pos.ra += parse_double(part) / 4.;
+                    break;
+                case CF::RAs:
+                    pos.ra += parse_double(part) / 240.;
+                    break;
+                case CF::DE_:
+                    dec_sign = parse_sign(part);
+                    break;
+                case CF::DEd:
+                    pos.dec += parse_double(part);
+                    break;
+                case CF::DEm:
+                    pos.dec += parse_double(part) / 60.;
+                    break;
+                case CF::DEs:
+                    pos.dec += parse_double(part) / 3600.;
+                    break;
+                case CF::Vmag:
+                    vmag = parse_double(part);
+                    break;
+            }
 #undef CF
+        }
+        catch (const std::out_of_range &)
+        {
+            throw std::runtime_error(""); // skipping the line
+        }
     }
     pos.dec *= dec_sign;
     return Star(name, pos, vmag);
