@@ -120,12 +120,15 @@ scene::Group build_track(
         group.elements.push_back(scene::Path{b});
     }
 
-    auto blind_beziered(interpolate_bezier(path));
-    for (int i(0), i_end(blind_beziered.size());
-         i < i_end; i += track.interval_ticks)
+    if (path.size() >= 2)
     {
-        auto p(blind_beziered[i]);
-        group.elements.push_back(scene::DirectedObject{p.p, p.perpendicular});
+        auto blind_beziered(interpolate_bezier(path));
+        for (int i(0), i_end(blind_beziered.size());
+             i < i_end; i += track.interval_ticks)
+        {
+            auto p(blind_beziered[i]);
+            group.elements.push_back(scene::DirectedObject{p.p, p.perpendicular});
+        }
     }
     return group;
 }
