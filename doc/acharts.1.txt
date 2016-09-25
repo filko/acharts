@@ -80,6 +80,28 @@ level _string_ = none
     a given coordinates.  Currently only supported is 'horizon' and
     'none' (the latter meaning celestial equator).
 
+Below sections can be repeated to specify multiple such entities.
+They are therefore not re-openable.
+
+
+`[catalogue]`
+~~~~~~~~~~~~~
+path _string_ = ""::
+
+    Path to file with catalogue.  The file may be gzipped.
+
+mag-limit _magnitudo_ = 100::
+
+    Objects fainter than this limit will not be rendered.
+
+pattern _string_ = "5-14 Name; 76-77 RAh; 78-79 RAm; 80-83 RAs; 84 DE-; 85-86 DEd; 87-88 DEm; 89-90 DEs; 103-107 Vmag"::
+
+    Pattern used for parsing data from catalogue.  For each element
+    range of positions is followed by an identifier.  Elements are
+    separated with semi-colons.  Whitespace is widely ignored.
+    Default is good for Yale Bright Star Catalogue.
+
+
 `[grid]`
 ~~~~~~~~
 name _string_ = ""::
@@ -99,6 +121,7 @@ start _angle_ = 0, end _angle_ = 0, step _angle_ = 0::
 
      Defines starting and ending point of the grid and the steps at
      which the grids will be put.
+
 
 `[tick]`
 ~~~~~~~~
