@@ -80,6 +80,36 @@ level _string_ = none
     a given coordinates.  Currently only supported is 'horizon' and
     'none' (the latter meaning celestial equator).
 
+`[grid]`
+~~~~~~~~
+name _string_ = ""::
+
+     SVG g identifier that will contain the grid.
+
+coordinates _string_ = "equatorial"::
+
+     Coordinate system for which the grid will be drawn.  Currently
+     supported: equatorial and horizontal.
+
+plane _string_ = "meridian"::
+
+     Specifies the plane of the grid.  meridian or parallel.
+
+start _angle_ = 0, end _angle_ = 0, step _angle_ = 0::
+
+     Defines starting and ending point of the grid and the steps at
+     which the grids will be put.
+
+`[tick]`
+~~~~~~~~
+name, coordinates, plane, start, end, step are same as for grids.
+
+base _angle_ = 0::
+     Meridian or parallel on which the ticks will be put on.
+
+display _string_ = "as_degrees"::
+     Specifies whether the tick is displayed as degrees or hours.
+
 
 CONFIGURATION TYPES
 -------------------
