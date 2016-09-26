@@ -1,0 +1,56 @@
+* {
+    fill: none;
+}
+
+#background rect {
+    fill: #c6aa95;
+}
+
+#background {
+    fill: white;
+}
+
+.catalog *, .stars * {
+    fill: #bba192;
+    stroke: black;
+    stroke-width: 0.1;
+}
+
+#planets * {
+    fill: black;
+    stroke: none;
+}
+
+#planets text {
+    fill: black;
+    stroke: none;
+}
+
+.solar_system * {
+    fill: black;
+}
+
+#Sun, #Moon {
+    fill: black;
+}
+
+.tracks path, .tracks line {
+    stroke: #787669;
+    stroke-width: 0.3;
+}
+
+.grid path {
+    stroke: #42628e;
+    stroke-width: 0.1;
+}
+
+#horizon path {
+    stroke-width: 0.5;
+    stroke: #5f6052;
+}
+
+.grid text, text {
+    fill: black;
+    font-size: 1mm;
+    font-family: sans-serif;
+}
