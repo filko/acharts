@@ -22,14 +22,6 @@ int main(int arc, char * arv[])
         Config config(arc, arv);
         std::cout << "done." << std::endl;
 
-        {
-            int i;
-            for (auto b : config.view<Track>())
-            {
-                i += b.interval_ticks;
-            }
-        }
-
         ln_lnlat_posn observer(config.location());
         const double t(config.t());
 
@@ -80,7 +72,7 @@ int main(int arc, char * arv[])
         for (auto & c : config.view<Catalogue>())
         {
             std::cout << c.path() << std::flush;
-            auto count{c.load()};
+            std::size_t count{c.load()};
             std::cout << "(" << count << "), " << std::flush;
 
             std::deque<Star> stars;
@@ -118,9 +110,9 @@ int main(int arc, char * arv[])
 
         if (config.moon())
         {
-            auto const & moon{*solar_manager.get("moon")};
+            auto const & moon(*solar_manager.get("moon"));
             std::deque<scene::Element> obj;
-            auto pos{moon.get_equ_coords(t)};
+            auto pos(moon.get_equ_coords(t));
             obj.push_back(scene::ProportionalObject{projection->project(pos),
                         moon.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         moon.name()});
@@ -131,9 +123,9 @@ int main(int arc, char * arv[])
 
         if (config.sun())
         {
-            auto const & sun{*solar_manager.get("sun")};
+            auto const & sun(*solar_manager.get("sun"));
             std::deque<scene::Element> obj;
-            auto pos{sun.get_equ_coords(t)};
+            auto pos(sun.get_equ_coords(t));
             obj.push_back(scene::ProportionalObject{projection->project(pos),
                         sun.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         sun.name()});

@@ -7,7 +7,7 @@
 namespace
 {
 
-const std::array<char, 2> gzip_magic = { 0x1f, char(0x8b) };
+const std::array<char, 2> gzip_magic = {{ 0x1f, char(0x8b) }};
 
 }
 

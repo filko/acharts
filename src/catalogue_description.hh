@@ -5,8 +5,9 @@
 
 #include "stars.hh"
 
-struct CatalogParsingDescription
+class CatalogParsingDescription
 {
+public:
     enum class Field
     {
         Name,

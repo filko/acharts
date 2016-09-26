@@ -5,6 +5,9 @@ AM_INIT_AUTOMAKE
 
 AC_PROG_CXX
 
+dnl libnova's header is broken by expecting this macro to be defined
+AC_CHECK_DECLS([round], [AC_DEFINE([HAVE_ROUND], [1])], [], [[#include <math.h>]])
+
 AC_CHECK_PROG(HAVE_ASCIIDOC, [asciidoc], [yes], [no])
 AC_CHECK_PROG(HAVE_XMLTO, [xmlto], [yes], [no])
 if test "x$HAVE_ASCIIDOC" = xno -o "x$HAVE_XMLTO" = xno; then

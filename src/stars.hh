@@ -5,8 +5,9 @@
 #include <string>
 #include <vector>
 
-struct Star
+class Star
 {
+public:
     std::string common_name_;
     ln_equ_posn pos_;
     double vmag_;

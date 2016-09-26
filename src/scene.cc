@@ -48,7 +48,7 @@ void create_parallel_grid(
                     break;
             }
         }
-        auto bezier{create_bezier_from_path(projection, path)};
+        auto bezier(create_bezier_from_path(projection, path));
         for (auto const & b : bezier)
             group.elements.push_back(scene::Path{b});
     }
@@ -77,7 +77,7 @@ void create_meridian_grid(
                     break;
             }
         }
-        auto bezier{create_bezier_from_path(projection, path)};
+        auto bezier(create_bezier_from_path(projection, path));
         for (auto const & b : bezier)
             group.elements.push_back(scene::Path{b});
     }
