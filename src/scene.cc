@@ -25,7 +25,7 @@ ln_equ_posn hrz_to_equ(ln_hrz_posn in, ln_lnlat_posn observer, double t)
 {
     ln_equ_posn out;
     ln_get_equ_from_hrz(&in, &observer, t, &out);
-    return std::move(out);
+    return out;
 }
 
 void create_parallel_grid(
@@ -104,7 +104,7 @@ scene::Group build_grid(
             break;
         }
     }
-    return std::move(group);
+    return group;
 }
 
 scene::Group build_track(
