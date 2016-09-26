@@ -5,8 +5,10 @@
 double parse_double(const std::string & in)
 {
     std::stringstream s{in};
-    double d;
+    double d(0);
     s >> d;
+    if (! s)
+        throw std::runtime_error(""); // skippery
     return d;
 }
 
@@ -20,9 +22,9 @@ double parse_sign(const std::string & in)
 
 const Star parse_line_into_star(const CatalogParsingDescription & description, const std::string & line)
 {
-    ln_equ_posn pos{};
+    ln_equ_posn pos{0, 0};
     std::string name;
-    double vmag{};
+    double vmag{0};
 
     double dec_sign{1};
 
