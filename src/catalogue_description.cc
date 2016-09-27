@@ -1,6 +1,7 @@
 #include "catalogue_description.hh"
 
 #include <sstream>
+#include <stdexcept>
 
 double parse_double(const std::string & in)
 {

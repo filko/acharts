@@ -1,3 +1,4 @@
+#include <cstring>
 #include <libnova/libnova.h>
 #include <deque>
 #include <fstream>

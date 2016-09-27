@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 
 class gzstream_error
     : public std::runtime_error
