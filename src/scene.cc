@@ -21,11 +21,18 @@ void Scene::add_group(Group && group)
 namespace
 {
 
-ln_equ_posn hrz_to_equ(ln_hrz_posn in, ln_lnlat_posn observer, double t)
+ln_equ_posn convert_to_equ(Coordinates coord, std::pair<double, double> in, ln_lnlat_posn observer, double t)
 {
-    ln_equ_posn out;
-    ln_get_equ_from_hrz(&in, &observer, t, &out);
-    return out;
+    switch(coord)
+    {
+        case Coordinates::Equatorial:
+            return ln_equ_posn{in.first, in.second};
+        case Coordinates::Horizontal:
+            ln_hrz_posn hin{in.first, in.second};
+            ln_equ_posn out;
+            ln_get_equ_from_hrz(&hin, &observer, t, &out);
+            return out;
+    }
 }
 
 void create_parallel_grid(
@@ -38,15 +45,7 @@ void create_parallel_grid(
         std::vector<ln_equ_posn> path;
         for (double x{0} ; x < 360.1 ; x += grid.density.val)
         {
-            switch (grid.coordinates)
-            {
-                case Coordinates::Equatorial:
-                    path.push_back({x, y});
-                    break;
-                case Coordinates::Horizontal:
-                    path.push_back(hrz_to_equ({x, y}, observer, t));
-                    break;
-            }
+            path.push_back(convert_to_equ(grid.coordinates, {x, y}, observer, t));
         }
         auto bezier(create_bezier_from_path(projection, path));
         for (auto const & b : bezier)
@@ -64,18 +63,7 @@ void create_meridian_grid(
         std::vector<ln_equ_posn> path;
         for (double y{grid.start.val} ; y <= grid.end.val ; y += grid.density.val)
         {
-            switch (grid.coordinates)
-            {
-                case Coordinates::Equatorial:
-                    path.push_back({x, y});
-                    break;
-                case Coordinates::Horizontal:
-                    ln_hrz_posn in{x, y};
-                    ln_equ_posn out;
-                    ln_get_equ_from_hrz(&in, &observer, t, &out);
-                    path.push_back(out);
-                    break;
-            }
+            path.push_back(convert_to_equ(grid.coordinates, {x, y}, observer, t));
         }
         auto bezier(create_bezier_from_path(projection, path));
         for (auto const & b : bezier)
