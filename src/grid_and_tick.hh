@@ -7,6 +7,7 @@ enum class Coordinates
 {
     Equatorial,
     Horizontal,
+    Ecliptic
 };
 
 enum class Plane

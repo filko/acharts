@@ -28,10 +28,19 @@ ln_equ_posn convert_to_equ(Coordinates coord, std::pair<double, double> in, ln_l
         case Coordinates::Equatorial:
             return ln_equ_posn{in.first, in.second};
         case Coordinates::Horizontal:
+        {
             ln_hrz_posn hin{in.first, in.second};
             ln_equ_posn out;
             ln_get_equ_from_hrz(&hin, &observer, t, &out);
             return out;
+        }
+        case Coordinates::Ecliptic:
+        {
+            ln_lnlat_posn hin{in.first, in.second};
+            ln_equ_posn out;
+            ln_get_equ_from_ecl(&hin, t, &out);
+            return out;
+        }
     }
 }
 

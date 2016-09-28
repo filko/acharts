@@ -75,6 +75,18 @@ struct value_parser_visitor
     }
 };
 
+Coordinates coordinate_from_string(const std::string & in)
+{
+    if ("equatorial" == in)
+        return Coordinates::Equatorial;
+    else if ("horizontal" == in)
+        return Coordinates::Horizontal;
+    else if ("ecliptic" == in)
+        return Coordinates::Ecliptic;
+
+    throw ConfigError("Unsupported coordinates type '" + in + "'.");
+}
+
 }
 
 struct Config::Implementation
@@ -194,12 +206,7 @@ struct Config::Implementation
                 if ("grid.name" == path)
                     grid.name = boost::get<std::string>(option);
                 else if ("grid.coordinates" == path)
-                {
-                    if ("equatorial" == boost::get<std::string>(option))
-                        grid.coordinates = Coordinates::Equatorial;
-                    else
-                        grid.coordinates = Coordinates::Horizontal;
-                }
+                    grid.coordinates = coordinate_from_string(boost::get<std::string>(option));
                 else if ("grid.plane" == path)
                 {
                     if ("parallel" == boost::get<std::string>(option))
@@ -226,12 +233,7 @@ struct Config::Implementation
                 if ("tick.name" == path)
                     tick.name = boost::get<std::string>(option);
                 else if ("tick.coordinates" == path)
-                {
-                    if ("equatorial" == boost::get<std::string>(option))
-                        tick.coordinates = Coordinates::Equatorial;
-                    else
-                        tick.coordinates = Coordinates::Horizontal;
-                }
+                    tick.coordinates = coordinate_from_string(boost::get<std::string>(option));
                 else if ("tick.plane" == path)
                 {
                     if ("parallel" == boost::get<std::string>(option))

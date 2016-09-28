@@ -48,6 +48,11 @@
     stroke: black;
 }
 
+#ecliptic path {
+    stroke-width: 0.3;
+    stroke: #6c6cf4;
+}
+
 .grid text, text {
     fill: black;
     font-size: 1mm;
