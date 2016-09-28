@@ -14,9 +14,9 @@ const std::vector<CanvasPoint> create_path_from_track(const std::shared_ptr<Proj
     std::vector<CanvasPoint> path;
     double step(track.mark_interval / track.interval_ticks);
 
-    for (double t(track.start.val()); t <= track.end.val(); t += step)
+    for (double t(0); t <= track.length.val(); t += step)
     {
-        auto coord(object->get_equ_coords(t));
+        auto coord(object->get_equ_coords(track.start.val() + t));
         path.push_back(projection->project(coord));
     }
 

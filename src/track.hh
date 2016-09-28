@@ -7,13 +7,13 @@
 struct Track
 {
     std::string name;
-    timestamp start, end;
+    timestamp start, length;
     double mark_interval;
     int interval_ticks;
 
     Track()
         : start(Now::get_jd()),
-          end(Now::get_jd() + 30.),
+          length(30.),
           mark_interval(7.0),
           interval_ticks(7)
     {

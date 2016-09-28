@@ -137,7 +137,7 @@ struct Config::Implementation
 
         add("track.object", "");
         add("track.start", timestamp{Now::get_jd()});
-        add("track.end", timestamp{Now::get_jd() + 30.});
+        add("track.length", timestamp{30.});
         add("track.mark-interval", timestamp{7.0});
         add("track.interval-ticks", integer{7});
 
@@ -189,8 +189,8 @@ struct Config::Implementation
                     track.name = boost::get<std::string>(option);
                 else if ("track.start" == path)
                     track.start = boost::get<timestamp>(option);
-                else if ("track.end" == path)
-                    track.end = boost::get<timestamp>(option);
+                else if ("track.length" == path)
+                    track.length = boost::get<timestamp>(option);
                 else if ("track.mark-interval" == path)
                     track.mark_interval = boost::get<timestamp>(option).val();
                 else if ("track.interval-ticks" == path)
@@ -370,7 +370,6 @@ void Config::update_timestamps()
     for (auto & track : imp_->tracks)
     {
         track->start = sanitize_timestamp(track->start);
-        track->end = sanitize_timestamp(track->end);
     }
 }
 
