@@ -3,6 +3,7 @@
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <iostream>
+#include <libnova/precession.h>
 #include <libnova/utility.h>
 #include <stdexcept>
 
@@ -129,4 +130,13 @@ std::shared_ptr<Projection> ProjectionFactory::create(const std::string & type,
         return std::make_shared<CylindricalEquidistantProjection>(canvas, apparent_canvas, center);
 
     throw ConfigError("Unknown projection specified: " + type);
+}
+
+ln_equ_posn convert_epoch(ln_equ_posn in, double fromJD, double toJD)
+{
+    if (fromJD == toJD)
+        return in;
+    ln_equ_posn out;
+    ln_get_equ_prec2(&in, fromJD, toJD, &out);
+    return out;
 }

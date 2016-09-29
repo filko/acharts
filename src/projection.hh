@@ -43,4 +43,6 @@ public:
                                               const ln_equ_posn & center);
 };
 
+ln_equ_posn convert_epoch(ln_equ_posn in, double fromJD, double toJD);
+
 #endif

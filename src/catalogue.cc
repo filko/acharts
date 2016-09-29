@@ -14,6 +14,7 @@ struct Catalogue::Implementation
 {
     typedef std::vector<Star> Stars;
     Stars stars_;
+    double epoch_ = 2451545.0;
     std::string path_;
     double mag_limit_ = 100.0;
     CatalogParsingDescription description;
@@ -70,6 +71,16 @@ const ConstStarIterator Catalogue::begin_stars() const
 const ConstStarIterator Catalogue::end_stars() const
 {
     return ConstStarIterator(this, imp_->stars_.size());
+}
+
+double Catalogue::epoch() const
+{
+    return imp_->epoch_;
+}
+
+void Catalogue::epoch(double epoch)
+{
+    imp_->epoch_ = epoch;
 }
 
 void Catalogue::path(const std::string & path)

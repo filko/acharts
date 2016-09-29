@@ -51,6 +51,8 @@ public:
     const ConstStarIterator begin_stars() const;
     const ConstStarIterator end_stars() const;
 
+    double epoch() const;
+    void epoch(double epoch);
     void path(const std::string & path);
     const std::string & path() const;
     void mag_limit(double limit);

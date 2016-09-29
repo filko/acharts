@@ -113,6 +113,7 @@ struct Config::Implementation
         add("core.stylesheet", "");
 
         add("catalogue.path", "");
+        add("catalogue.epoch", timestamp{});
         add("catalogue.mag-limit", double{100});
         add("catalogue.pattern", "5-14 Name; 76-77 RAh; 78-79 RAm; 80-83 RAs; 84 DE-; 85-86 DEd; 87-88 DEm; 89-90 DEs; 103-107 Vmag");
 
@@ -171,6 +172,8 @@ struct Config::Implementation
                 boost::apply_visitor(value_parser_visitor(value), option);
                 if ("catalogue.path" == path)
                     catalogues.back()->path(boost::get<std::string>(option));
+                else if ("catalogue.epoch" == path)
+                    catalogues.back()->epoch(boost::get<timestamp>(option).val());
                 else if ("catalogue.mag-limit" == path)
                     catalogues.back()->mag_limit(boost::get<double>(option));
                 else if ("catalogue.pattern" == path)
@@ -370,6 +373,11 @@ void Config::update_timestamps()
     {
         track->start = sanitize_timestamp(track->start);
     }
+}
+
+double Config::epoch() const
+{
+    return imp_->get<timestamp>("core.epoch").val();
 }
 
 const ln_lnlat_posn Config::location() const

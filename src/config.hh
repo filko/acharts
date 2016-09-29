@@ -76,6 +76,7 @@ public:
     ~Config();
 
     const ln_lnlat_posn location() const;
+    double epoch() const;
     const CanvasPoint canvas_dimensions() const;
     double canvas_margin() const;
     const std::string projection_type() const;

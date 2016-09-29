@@ -25,6 +25,7 @@ int main(int arc, char * arv[])
 
         ln_lnlat_posn observer(config.location());
         const double t(config.t());
+        const double global_epoch(config.epoch());
 
         CanvasPoint canvas(config.canvas_dimensions());
         ln_equ_posn apparent_canvas(config.projection_dimensions()),
@@ -72,14 +73,15 @@ int main(int arc, char * arv[])
         std::cout << "Loading catalogues... " << std::flush;
         for (auto & c : config.view<Catalogue>())
         {
-            std::cout << c.path() << std::flush;
+            const double epoch(c.epoch());
+            std::cout << c.path() << "(" << epoch << ") " << std::flush;
             std::size_t count{c.load()};
-            std::cout << "(" << count << "), " << std::flush;
+            std::cout << "{" << count << "}, " << std::flush;
 
             std::deque<scene::Element> objs;
             for (auto s(c.begin_stars()), s_end(c.end_stars()) ; s != s_end ; ++s)
             {
-                objs.push_back(scene::Object{projection->project(s->pos_), s->vmag_});
+                objs.push_back(scene::Object{projection->project(convert_epoch(s->pos_, epoch, global_epoch)), s->vmag_});
             }
             scn.add_group(scene::Group{"catalog", c.path(), std::move(objs)});
         }
