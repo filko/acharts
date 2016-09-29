@@ -142,7 +142,7 @@ int main(int arc, char * arv[])
             for (auto const & track : config.view<Track>())
             {
                 std::cout << track.name << " " << std::flush;
-                tracks.elements.push_back(scene::build_track(track, projection, solar_manager));
+                tracks.elements.push_back(scene::build_track(track, projection, global_epoch, solar_manager));
             }
             scn.add_group(std::move(tracks));
             std::cout << "done." << std::endl;

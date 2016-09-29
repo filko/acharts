@@ -9,7 +9,8 @@
 #include "bezier.hh"
 
 const std::vector<CanvasPoint> create_path_from_track(const std::shared_ptr<Projection> & projection,
-                                                      const Track & track, const std::shared_ptr<const SolarObject> & object)
+                                                      const Track & track, const double epoch,
+                                                      const std::shared_ptr<const SolarObject> & object)
 {
     std::vector<CanvasPoint> path;
     double step(track.mark_interval / track.interval_ticks);
@@ -17,7 +18,7 @@ const std::vector<CanvasPoint> create_path_from_track(const std::shared_ptr<Proj
     for (double t(0); t <= track.length.val(); t += step)
     {
         auto coord(object->get_equ_coords(track.start.val() + t));
-        path.push_back(projection->project(coord));
+        path.push_back(projection->project(convert_epoch(coord, JD2000, epoch)));
     }
 
     return path;

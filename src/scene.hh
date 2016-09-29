@@ -112,6 +112,7 @@ scene::Group build_grid(
 scene::Group build_track(
     const Track & track,
     const std::shared_ptr<Projection> & projection,
+    const double epoch,
     const SolarObjectManager & solar_manager);
 
 scene::Group build_tick(

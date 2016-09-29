@@ -107,10 +107,11 @@ scene::Group build_grid(
 scene::Group build_track(
     const Track & track,
     const std::shared_ptr<Projection> & projection,
+    const double epoch,
     const SolarObjectManager & solar_manager)
 {
     scene::Group group{"track", track.name, {}};
-    auto path(create_path_from_track(projection, track, solar_manager.get(track.name)));
+    auto path(create_path_from_track(projection, track, epoch, solar_manager.get(track.name)));
     auto beziers(create_bezier_from_path(path, projection->max_distance()));
     for (auto const & b : beziers)
     {
