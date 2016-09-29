@@ -35,25 +35,23 @@ const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Proj
 
 const std::deque<BezierCurve> create_bezier_from_path(const std::vector<CanvasPoint> & path)
 {
+    std::vector<std::vector<CanvasPoint>> input(1);
+    for (auto const & p : path)
     {
-        std::vector<std::vector<CanvasPoint>> input(1);
-        for (auto const & p : path)
-        {
-            if (! p.nan())
-                input.back().push_back(p);
-            else if (! input.back().empty())
-                input.push_back(std::vector<CanvasPoint>());
-        }
-
-        std::deque<BezierCurve> ret;
-        for (auto const & b : input)
-        {
-            if (b.size() < 2)
-                continue;
-
-            ret.push_back(interpolate_bezier(b));
-        }
-
-        return ret;
+        if (! p.nan())
+            input.back().push_back(p);
+        else if (! input.back().empty())
+            input.push_back(std::vector<CanvasPoint>());
     }
+
+    std::deque<BezierCurve> ret;
+    for (auto const & b : input)
+    {
+        if (b.size() < 2)
+            continue;
+
+        ret.push_back(interpolate_bezier(b));
+    }
+
+    return ret;
 }
