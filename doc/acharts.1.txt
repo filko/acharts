@@ -204,3 +204,11 @@ AzimuthalEquidistant::
         projection.  In the simplest form, with projection centre at
         celestial pole, supposedly known to ancient Egyptians.  Some
         countries erroneously insist on calling it Postel projection.
+
+CylindricalEquidistant::
+
+        Simplest of projections.  Right ascension and declination are
+        mapped 1:1 to canvas coordinates.  Reasonably fine for
+        painting entire equator/zodiac region, but distortions grow
+        rapidly with declination.  Credited to Erathostenes and
+        Marinus of Tyre.

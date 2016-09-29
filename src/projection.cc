@@ -84,6 +84,32 @@ public:
     }
 };
 
+class CylindricalEquidistantProjection
+    : public Projection
+{
+public:
+    CylindricalEquidistantProjection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas,
+                                     const ln_equ_posn & center)
+        : Projection(canvas, apparent_canvas, center)
+    { }
+
+    virtual CanvasPoint project(const ln_equ_posn & pos) const
+    {
+        double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
+
+        double x(ra - center_.ra);
+        if (x > M_PI)
+            x -= 2 * M_PI;
+        double y(dec - center_.dec);
+
+        // negate x, because for svg up is down
+        // negate y, because right ascention is going left to right
+        return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
+                           -y * canvas_.y / apparent_canvas_.dec)
+            .rotate(rotationSin_, rotationCos_);
+    }
+};
+
 std::shared_ptr<Projection> ProjectionFactory::create(const std::string & type,
                                                       const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas,
                                                       const ln_equ_posn & center)
@@ -92,6 +118,8 @@ std::shared_ptr<Projection> ProjectionFactory::create(const std::string & type,
 
     if ("azimuthalequidistant" == t)
         return std::make_shared<AzimuthalEquidistantProjection>(canvas, apparent_canvas, center);
+    if ("cylindricalequidistant" == t)
+        return std::make_shared<CylindricalEquidistantProjection>(canvas, apparent_canvas, center);
 
     throw ConfigError("Unknown projection specified: " + type);
 }
