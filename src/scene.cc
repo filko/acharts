@@ -111,7 +111,7 @@ scene::Group build_track(
 {
     scene::Group group{"track", track.name, {}};
     auto path(create_path_from_track(projection, track, solar_manager.get(track.name)));
-    auto beziers(create_bezier_from_path(path));
+    auto beziers(create_bezier_from_path(path, projection->max_distance()));
     for (auto const & b : beziers)
     {
         group.elements.push_back(scene::Path{b});

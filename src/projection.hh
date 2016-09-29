@@ -26,6 +26,7 @@ public:
     virtual CanvasPoint project(const ln_equ_posn & pos) const = 0;
     virtual double scale_at_point(const ln_equ_posn & pos) const;
     virtual void rotate_to_level(const CanvasPoint & pos);
+    double max_distance() const;
 
 protected:
     CanvasPoint canvas_;

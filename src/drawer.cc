@@ -30,10 +30,46 @@ const std::deque<BezierCurve> create_bezier_from_path(const std::shared_ptr<Proj
     {
         ret.push_back(projection->project(p));
     }
-    return create_bezier_from_path(ret);
+    return create_bezier_from_path(ret, projection->max_distance());
 }
 
-const std::deque<BezierCurve> create_bezier_from_path(const std::vector<CanvasPoint> & path)
+namespace
+{
+
+void cut_paths_when_distance_is_big(std::vector<std::vector<CanvasPoint>> & input, double max_distance)
+{
+    auto iter(input.begin());
+    while (input.end() != iter)
+    {
+        if (iter->size() < 2)
+        {
+            iter = input.erase(iter);
+            continue;
+        }
+
+        auto el2(iter->begin());
+        auto el1(el2++);
+        auto iter2(iter);
+        ++iter;
+        while (iter2->end() != el2)
+        {
+            double distance((*el1 - *el2).norm());
+            if (distance > max_distance)
+            {
+                std::vector<CanvasPoint> v2(std::make_move_iterator(el2), std::make_move_iterator(iter2->end()));
+                iter2->erase(el2, iter2->end());
+                ++iter2;
+                iter = input.insert(iter2, std::move(v2));
+                break;
+            }
+            ++el1, ++el2;
+        }
+    }
+}
+
+}
+
+const std::deque<BezierCurve> create_bezier_from_path(const std::vector<CanvasPoint> & path, double max_distance)
 {
     std::vector<std::vector<CanvasPoint>> input(1);
     for (auto const & p : path)
@@ -43,6 +79,8 @@ const std::deque<BezierCurve> create_bezier_from_path(const std::vector<CanvasPo
         else if (! input.back().empty())
             input.push_back(std::vector<CanvasPoint>());
     }
+
+    cut_paths_when_distance_is_big(input, max_distance);
 
     std::deque<BezierCurve> ret;
     for (auto const & b : input)

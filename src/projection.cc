@@ -50,6 +50,11 @@ void Projection::rotate_to_level(const CanvasPoint & pos)
     rotationCos_ = std::cos(angle);
 }
 
+double Projection::max_distance() const
+{
+    return canvas_.x / 2.;
+}
+
 class AzimuthalEquidistantProjection
     : public Projection
 {
