@@ -76,12 +76,10 @@ int main(int arc, char * arv[])
             std::size_t count{c.load()};
             std::cout << "(" << count << "), " << std::flush;
 
-            std::deque<Star> stars;
-            std::copy(c.begin_stars(), c.end_stars(), std::back_inserter(stars));
             std::deque<scene::Element> objs;
-            for (auto const & star : stars)
+            for (auto s(c.begin_stars()), s_end(c.end_stars()) ; s != s_end ; ++s)
             {
-                objs.push_back(scene::Object{projection->project(star.pos_), star.vmag_});
+                objs.push_back(scene::Object{projection->project(s->pos_), s->vmag_});
             }
             scn.add_group(scene::Group{"catalog", c.path(), std::move(objs)});
         }
