@@ -344,7 +344,6 @@ Config::Config(int arc, char * arv[])
                                 [&](const std::string & s)                        { imp_->accept_section(s); },
                                 [&](const std::string & p, const std::string & v) { imp_->accept_value(p, v); });
     update_timestamps();
-    imp_->dump();
 }
 
 Config::~Config()
