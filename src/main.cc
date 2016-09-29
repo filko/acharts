@@ -103,7 +103,7 @@ int main(int arc, char * arv[])
             {
                 objs.push_back(
                     scene::LabelledObject{
-                        projection->project(planet->get_equ_coords(t)), planet->get_magnitude(t),
+                        projection->project(convert_epoch(planet->get_equ_coords(t), JD2000, global_epoch)), planet->get_magnitude(t),
                             planet->name()});
             }
             scn.add_group(scene::Group{"solar_system", "planets", std::move(objs)});
@@ -114,7 +114,7 @@ int main(int arc, char * arv[])
             auto const & moon(*solar_manager.get("moon"));
             std::deque<scene::Element> obj;
             auto pos(moon.get_equ_coords(t));
-            obj.push_back(scene::ProportionalObject{projection->project(pos),
+            obj.push_back(scene::ProportionalObject{projection->project(convert_epoch(pos, JD2000, global_epoch)),
                         moon.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         moon.name()});
             scn.add_group(scene::Group{"solar_system", "moon",
@@ -127,7 +127,7 @@ int main(int arc, char * arv[])
             auto const & sun(*solar_manager.get("sun"));
             std::deque<scene::Element> obj;
             auto pos(sun.get_equ_coords(t));
-            obj.push_back(scene::ProportionalObject{projection->project(pos),
+            obj.push_back(scene::ProportionalObject{projection->project(convert_epoch(pos, JD2000, global_epoch)),
                         sun.get_sdiam(t) * projection->scale_at_point(pos) / 3600.,
                         sun.name()});
             scn.add_group(scene::Group{"solar_system", "sun",

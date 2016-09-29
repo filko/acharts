@@ -373,6 +373,9 @@ void Config::update_timestamps()
     {
         track->start = sanitize_timestamp(track->start);
     }
+
+    auto & epoch(imp_->tree.get_child("core.epoch").data());
+    epoch = sanitize_timestamp(boost::get<timestamp>(epoch));
 }
 
 double Config::epoch() const
