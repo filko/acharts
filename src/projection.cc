@@ -100,6 +100,8 @@ public:
         double x(ra - center_.ra);
         if (x > M_PI)
             x -= 2 * M_PI;
+        else if (x < -M_PI)
+            x += 2 * M_PI;
         double y(dec - center_.dec);
 
         // negate x, because for svg up is down
