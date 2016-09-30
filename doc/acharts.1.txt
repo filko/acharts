@@ -161,7 +161,12 @@ Point in time.
 
 J<float>::
 
-        Julian day.  Eg. J2000.0.
+        Julian year.  Eg. J2000.0.
+
+
+B<float>::
+
+        Besselian year.  Eg. B1950.0.
 
 
 <int>:<int>[:<float>] [<int>-<int>-<int>] [<double>]:

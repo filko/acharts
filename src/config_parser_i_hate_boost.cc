@@ -249,6 +249,17 @@ struct julianepoch_to_juliandate_imp
 };
 phoenix::function<julianepoch_to_juliandate_imp> julianepoch_to_juliandate;
 
+struct besselianepoch_to_juliandate_imp
+{
+    typedef double result_type;
+
+    double operator()(double epoch) const
+    {
+        return (epoch - 1900.0) * 365.242198781 + 2415020.31352;
+    }
+};
+phoenix::function<besselianepoch_to_juliandate_imp> besselianepoch_to_juliandate;
+
 struct parseddate_to_juliandate_imp
 {
     typedef double result_type;
@@ -313,6 +324,7 @@ public:
         using namespace boost::spirit::qi;
         start = (double_ >> "JD") [_val = _1]
             | ("J" > double_) [_val = julianepoch_to_juliandate(_1)]
+            | ("B" > double_) [_val = besselianepoch_to_juliandate(_1)]
             | (
                 int_ >> ":" >> int_ >> -(":" >> double_) >>
                 -(omit[space] >> int_ >> "-" >> int_ >> "-" >> int_) >>
