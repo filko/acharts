@@ -96,6 +96,8 @@ public:
     const std::vector<std::string> planets() const;
     bool planets_labels() const;
 
+    bool constellations() const;
+
     bool moon() const;
     bool sun() const;
 

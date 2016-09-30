@@ -148,6 +148,13 @@ int main(int arc, char * arv[])
             std::cout << "done." << std::endl;
         }
 
+        if (config.constellations())
+        {
+            std::cout << "Drawing constellations... " << std::flush;
+            scn.add_group(scene::build_constellations(projection, global_epoch));
+            std::cout << "done." << std::endl;
+        }
+
         std::cout << "Drawing grids... " << std::flush;
         for (auto grid : config.view<Grid>())
         {

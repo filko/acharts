@@ -2,6 +2,7 @@
 
 #include <libnova/transform.h>
 
+#include "constellations.hh"
 #include "drawer.hh"
 
 namespace scene
@@ -162,6 +163,37 @@ scene::Group build_tick(
                 group.elements.push_back(scene::Text{str, projection->project({tick.base.val, y})});
             }
             break;
+    }
+    return group;
+}
+
+scene::Group build_constellations(const std::shared_ptr<Projection> & projection, const double epoch)
+{
+    static constexpr double B1875{2405889.258550475};
+    auto pr = [projection,epoch](const ln_equ_posn & in)
+    {
+        return projection->project(convert_epoch(in, B1875, epoch));
+    };
+
+    scene::Group group{"constellations", "all", {}};
+    for (auto edge : constellation_edges)
+    {
+        ln_equ_posn s(edge.first), e(edge.second);
+        s.ra *= 15.0; e.ra *= 15.0;
+
+        double ln_equ_posn::* memp;
+        if (s.ra == e.ra)
+            memp = &ln_equ_posn::dec;
+        else
+            memp = &ln_equ_posn::ra;
+
+        std::vector<CanvasPoint> path;
+        for ( ; s.*memp < e.*memp ; s.*memp += 1.)
+            path.push_back(pr(s));
+        path.push_back(pr(e));
+        auto bezier(create_bezier_from_path(path, projection->max_distance()));
+        for (const auto & b : bezier)
+            group.elements.push_back(scene::Path{b});
     }
     return group;
 }

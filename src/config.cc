@@ -111,6 +111,7 @@ struct Config::Implementation
 
         add("core.output", "output.svg");
         add("core.stylesheet", "");
+        add("core.constellations", boolean{false});
 
         add("catalogue.path", "");
         add("catalogue.epoch", timestamp{});
@@ -408,6 +409,11 @@ bool Config::moon() const
 bool Config::sun() const
 {
     return imp_->get<boolean>("sun.enable").val;
+}
+
+bool Config::constellations() const
+{
+    return imp_->get<boolean>("core.constellations").val;
 }
 
 const std::string Config::projection_type() const

@@ -119,6 +119,10 @@ scene::Group build_tick(
     const Tick & tick,
     const std::shared_ptr<Projection> & projection);
 
+scene::Group build_constellations(
+    const std::shared_ptr<Projection> & projection,
+    const double epoch);
+
 }
 
 

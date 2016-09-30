@@ -6,6 +6,7 @@ acharts_SOURCES = \
 	canvas.hh \
 	catalogue.cc catalogue.hh \
 	catalogue_description.cc catalogue_description.hh \
+	constellations.cc constellations.hh constellations.cc.in \
 	config.cc config.hh \
 	drawer.cc drawer.hh \
 	exceptions.hh \

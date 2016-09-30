@@ -58,3 +58,9 @@
     font-size: 1mm;
     font-family: sans-serif;
 }
+
+.constellations {
+    stroke: #db565b;
+    stroke-width: 0.1;
+    stroke-linecap: round;
+}
