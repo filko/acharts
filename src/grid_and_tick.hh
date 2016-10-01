@@ -43,7 +43,7 @@ struct Grid
     Coordinates coordinates;
     Plane plane;
     std::string name;
-    angle start, end, step, density = {2};
+    angle start, end, step = {1}, density = {2};
 };
 
 struct Tick
@@ -52,7 +52,7 @@ struct Tick
     Plane plane;
     std::string name;
     enum Type { as_degrees, as_hours } display = as_degrees;
-    angle start, end, step, base = {0};
+    angle start, end, step = {1}, base = {0};
 };
 
 #endif

@@ -117,10 +117,11 @@ plane _string_ = "meridian"::
 
      Specifies the plane of the grid.  meridian or parallel.
 
-start _angle_ = 0, end _angle_ = 0, step _angle_ = 0::
+start _angle_ = 0, end _angle_ = 0, step _angle_ = 1::
 
      Defines starting and ending point of the grid and the steps at
-     which the grids will be put.
+     which the grids will be put.  Setting equal start and end allows
+     for drawing a single grid circle, such as horizon.
 
 
 `[tick]`
