@@ -39,3 +39,8 @@ repository of catalogues that can be used by acharts.)
 After obtaining the catalogue, an example configuration can be tested
 by using `./build/src/acharts examples/genesis.txt`.  Further
 documentation is available as a manpage at `./build/doc/acharts.1`.
+
+acharts only generates geometry of the map, annotated with relevant
+class and id attributes.  Those attributes can be referenced in
+Cascading Style Sheet that is embedded in the output, giving
+flexibility of usage.
