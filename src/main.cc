@@ -61,14 +61,27 @@ int main(int arc, char * arv[])
             ln_hrz_posn hor;
             ln_get_hrz_from_equ(&center, &observer, t, &hor);
             ln_hrz_posn hor2(hor);
+            hor.az -= 1.0;
             hor2.az += 1.0;
-            ln_equ_posn equ;
-            ln_get_equ_from_hrz(&hor2, &observer, t, &equ);
-            CanvasPoint cp(equ.ra - center.ra, equ.dec - center.dec);
-            if (cp.x > 180.)
-                cp.x -= 360.;
+            ln_equ_posn equ, equ2;
+            ln_get_equ_from_hrz(&hor, &observer, t, &equ);
+            ln_get_equ_from_hrz(&hor2, &observer, t, &equ2);
 
-            projection->rotate_to_level(cp);
+
+            projection->rotate_to_level(equ, equ2);
+        }
+        else if (config.projection_level() == "ecliptic")
+        {
+            ln_lnlat_posn ecl;
+            ln_get_ecl_from_equ(&center, t, &ecl);
+            ln_lnlat_posn ecl2(ecl);
+            ecl.lng += 1.0;
+            ecl2.lng -= 1.0;
+            ln_equ_posn equ, equ2;
+            ln_get_equ_from_ecl(&ecl, t, &equ);
+            ln_get_equ_from_ecl(&ecl2, t, &equ2);
+
+            projection->rotate_to_level(equ, equ2);
         }
 
         std::string style;

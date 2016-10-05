@@ -23,13 +23,77 @@
 #include "projection.hh"
 
 #include <boost/algorithm/string.hpp>
+#include <array>
 #include <cmath>
-#include <iostream>
 #include <libnova/precession.h>
 #include <libnova/utility.h>
 #include <stdexcept>
 
 #include "exceptions.hh"
+
+namespace {
+
+template <typename T, int D>
+struct vec
+{
+    std::array<T, D> data;
+    T & operator[](std::size_t index) { return data[index]; }
+    T operator[](std::size_t index) const { return data[index]; }
+
+};
+
+template <typename T, int D>
+vec<T, D> operator*(T l, const vec<T,D> & r)
+{
+    vec<T, D> ret;
+    for (int i(0); i < D; ++i)
+        ret[i] = l * r[i];
+    return ret;
+}
+
+template <typename T, int D>
+vec<T, D> operator+(vec<T, D> l, const vec<T, D> & r)
+{
+    for (int i(0); i < D; ++i)
+        l[i] += r[i];
+    return l;
+}
+
+template <typename T, int D>
+T operator*(const vec<T, D> & l, const vec<T, D> & r)
+{
+    T ret = {};
+    for (int i(0); i < D; ++i)
+        ret += l[i] * r[i];
+    return ret;
+}
+
+template <typename T>
+vec<T, 3> cross(const vec<T, 3> & l, const vec<T, 3> & r)
+{
+    return vec<T, 3>{{{
+                l[1]*r[2] - r[1]*l[2],
+                r[0]*l[2] - l[0]*r[2],
+                l[0]*r[1] - r[0]*l[1]
+                    }}};
+}
+
+SphericalCoord rotate(SphericalCoord pos, SphericalCoord axis, long double rot)
+{
+    typedef vec<long double, 3> vec3;
+    pos.dec = M_PI_2 - pos.dec;
+    axis.dec = M_PI_2 - axis.dec;
+    vec3 a = {{{sin(pos.dec) * cos(pos.ra),   sin(pos.dec) * sin(pos.ra),   cos(pos.dec)}}};
+
+    vec3 k = {{{sin(axis.dec) * cos(axis.ra), sin(axis.dec) * sin(axis.ra), cos(axis.dec)}}};
+
+    vec3 b = std::cos(rot) * a + std::sin(rot) * cross(k, a) + (k * a) * (1. - std::cos(rot)) * k;
+
+    return SphericalCoord(double(std::atan2(b[1], b[0])),
+                          double(M_PI_2 - std::atan2(std::hypot(b[0], b[1]), b[2])));
+}
+
+}
 
 SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
     : ra(ln_deg_to_rad(rh.ra)),
@@ -37,9 +101,14 @@ SphericalCoord::SphericalCoord(const ln_equ_posn & rh)
 {
 }
 
+SphericalCoord::SphericalCoord(double r, double d)
+    : ra(r), dec(d)
+{
+}
+
 Projection::Projection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
     : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center),
-      rotationSin_(0.), rotationCos_(1.)
+      rotation_(0), rotationSin_(0.), rotationCos_(1.)
 {
     if (0. == apparent_canvas_.ra)
     {
@@ -58,6 +127,11 @@ Projection::~Projection()
 {
 }
 
+CanvasPoint Projection::project(const ln_equ_posn & pos) const
+{
+    return project_imp(SphericalCoord{pos});
+}
+
 double Projection::scale_at_point(const ln_equ_posn & pos) const
 {
     ln_equ_posn p2(pos);
@@ -66,16 +140,21 @@ double Projection::scale_at_point(const ln_equ_posn & pos) const
     return (o1.x - o2.x) * 10.;
 }
 
-void Projection::rotate_to_level(const CanvasPoint & pos)
+void Projection::rotate_to_level(const ln_equ_posn & beg, const ln_equ_posn & end)
 {
-    double angle(M_PI - std::atan2(pos.y, pos.x));
+    CanvasPoint center(project(beg)),
+        leveling(project(end));
+
+    CanvasPoint diff(center - leveling);
+    double angle(M_PI - std::atan2(diff.y, diff.x));
     rotationSin_ = std::sin(angle);
     rotationCos_ = std::cos(angle);
+    rotation_ = angle;
 }
 
 double Projection::max_distance() const
 {
-    return canvas_.x / 2.;
+    return canvas_.x / 4.;
 }
 
 class AzimuthalEquidistantProjection
@@ -88,10 +167,9 @@ public:
     {
     }
 
-    virtual CanvasPoint project(const ln_equ_posn & pos) const
+    virtual CanvasPoint project_imp(const SphericalCoord & pos) const
     {
-        double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
-        double cosc(sin(center_.dec) * sin(dec) + cos(center_.dec) * cos(dec) * cos(ra - center_.ra));
+        double cosc(sin(center_.dec) * sin(pos.dec) + cos(center_.dec) * cos(pos.dec) * cos(pos.ra - center_.ra));
         double c(acos(cosc));
         if (fabs(c - M_PI) < 0.0001)
             return CanvasPoint{NAN, NAN};
@@ -101,8 +179,8 @@ public:
             k = 1;
         else
             k = c / sin(c);
-        double x(k * cos(dec) * sin(ra - center_.ra));
-        double y(k * (cos(center_.dec) * sin(dec) - sin(center_.dec) * cos(dec) * cos(ra - center_.ra)));
+        double x(k * cos(pos.dec) * sin(pos.ra - center_.ra));
+        double y(k * (cos(center_.dec) * sin(pos.dec) - sin(center_.dec) * cos(pos.dec) * cos(pos.ra - center_.ra)));
 
         // negate x, because for svg up is down
         // negate y, because right ascention is going left to right
@@ -121,22 +199,20 @@ public:
         : Projection(canvas, apparent_canvas, center)
     { }
 
-    virtual CanvasPoint project(const ln_equ_posn & pos) const
+    virtual CanvasPoint project_imp(const SphericalCoord & pos) const
     {
-        double ra(ln_deg_to_rad(pos.ra)), dec(ln_deg_to_rad(pos.dec));
-
-        double x(ra - center_.ra);
+        SphericalCoord rotated = rotate(pos, center_, rotation_);
+        double x(rotated.ra - center_.ra);
         if (x > M_PI)
             x -= 2 * M_PI;
         else if (x < -M_PI)
             x += 2 * M_PI;
-        double y(dec - center_.dec);
+        double y(rotated.dec - center_.dec);
 
         // negate x, because for svg up is down
         // negate y, because right ascention is going left to right
         return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
-                           -y * canvas_.y / apparent_canvas_.dec)
-            .rotate(rotationSin_, rotationCos_);
+                           -y * canvas_.y / apparent_canvas_.dec);
     }
 };
 

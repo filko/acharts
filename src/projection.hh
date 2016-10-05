@@ -33,6 +33,7 @@ struct SphericalCoord
     double ra, dec;
 
     SphericalCoord(const ln_equ_posn & rh);
+    SphericalCoord(double r, double d);
 };
 
 class Projection
@@ -45,16 +46,18 @@ protected:
 
 public:
     virtual ~Projection();
-    virtual CanvasPoint project(const ln_equ_posn & pos) const = 0;
+    CanvasPoint project(const ln_equ_posn & pos) const;
     virtual double scale_at_point(const ln_equ_posn & pos) const;
-    virtual void rotate_to_level(const CanvasPoint & pos);
+    void rotate_to_level(const ln_equ_posn & beg, const ln_equ_posn & end);
     double max_distance() const;
 
 protected:
-    CanvasPoint canvas_;
+    virtual CanvasPoint project_imp(const SphericalCoord & pos) const = 0;
+
+    const CanvasPoint canvas_;
     SphericalCoord apparent_canvas_;
-    SphericalCoord center_;
-    double rotationSin_, rotationCos_;
+    const SphericalCoord center_;
+    double rotation_, rotationSin_, rotationCos_;
 };
 
 class ProjectionFactory
