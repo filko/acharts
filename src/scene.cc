@@ -159,33 +159,35 @@ scene::Group build_tick(
     const std::shared_ptr<Projection> & projection)
 {
     scene::Group group{"tick", tick.name, {}};
+
+    double ln_equ_posn::* locked;
+    double ln_equ_posn::* rolling;
     switch (tick.plane)
     {
         case Plane::Parallel:
-            for (double x{tick.start.val} ; x <= tick.end.val ; x += tick.step.val)
-            {
-                std::string str;
-                if (tick.display == Tick::as_hours)
-                    str = stringify(angle{x}, as_hour);
-                else
-                    str = stringify(angle{x}, as_degree);
-
-                group.elements.push_back(scene::Text{str, projection->project({x, tick.base.val})});
-            }
+            locked = &ln_equ_posn::dec;
+            rolling = &ln_equ_posn::ra;
             break;
         case Plane::Meridian:
-            for (double y{tick.start.val} ; y <= tick.end.val ; y += tick.step.val)
-            {
-                std::string str;
-                if (tick.display == Tick::as_hours)
-                    str = stringify(angle{y}, as_hour);
-                else
-                    str = stringify(angle{y}, as_degree);
-
-                group.elements.push_back(scene::Text{str, projection->project({tick.base.val, y})});
-            }
+            locked = &ln_equ_posn::ra;
+            rolling = &ln_equ_posn::dec;
             break;
     }
+
+    for (double p{tick.start.val} ; p <= tick.end.val ; p += tick.step.val)
+    {
+        std::string str;
+        if (tick.display == Tick::as_hours)
+            str = stringify(angle{p}, as_hour);
+        else
+            str = stringify(angle{p}, as_degree);
+
+        ln_equ_posn pos;
+        pos.*locked = tick.base.val;
+        pos.*rolling = p;
+        group.elements.push_back(scene::Text{str, projection->project(pos)});
+    }
+
     return group;
 }
 
