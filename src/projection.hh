@@ -58,6 +58,7 @@ protected:
     const CanvasPoint canvas_;
     SphericalCoord apparent_canvas_;
     const SphericalCoord center_;
+    double scaleX_, scaleY_;
     long double rotationSin_, rotationCos_;
 };
 

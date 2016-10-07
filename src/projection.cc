@@ -108,6 +108,11 @@ Projection::Projection(const CanvasPoint & canvas, const ln_equ_posn & apparent_
     {
         apparent_canvas_.dec = apparent_canvas_.ra * canvas_.y / canvas_.x;
     }
+
+    // negate x, because for svg up is down
+    // negate y, because right ascention is going left to right
+    scaleX_ = -canvas_.x / apparent_canvas_.ra;
+    scaleY_ = -canvas_.y / apparent_canvas_.dec;
 }
 
 Projection::~Projection()
@@ -173,10 +178,7 @@ public:
         double x(k * cos(pos.dec) * sin(pos.ra - center_.ra));
         double y(k * (cos(center_.dec) * sin(pos.dec) - sin(center_.dec) * cos(pos.dec) * cos(pos.ra - center_.ra)));
 
-        // negate x, because for svg up is down
-        // negate y, because right ascention is going left to right
-        return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
-                           -y * canvas_.y / apparent_canvas_.dec)
+        return CanvasPoint(scaleX_ * x, scaleY_ * y)
             .rotate(rotationSin_, rotationCos_);
     }
 };
@@ -202,10 +204,7 @@ public:
             x += 2 * M_PI;
         double y(rotated.dec - center_.dec);
 
-        // negate x, because for svg up is down
-        // negate y, because right ascention is going left to right
-        return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
-                           -y * canvas_.y / apparent_canvas_.dec);
+        return CanvasPoint(scaleX_ * x, scaleY_ * y);
     }
 
     virtual void rotate_to_level_imp()
