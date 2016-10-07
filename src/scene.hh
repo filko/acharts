@@ -139,7 +139,8 @@ scene::Group build_track(
 
 scene::Group build_tick(
     const Tick & tick,
-    const std::shared_ptr<Projection> & projection);
+    const std::shared_ptr<Projection> & projection,
+    ln_lnlat_posn observer, double t);
 
 scene::Group build_constellations(
     const std::shared_ptr<Projection> & projection,

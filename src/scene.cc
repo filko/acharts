@@ -156,21 +156,23 @@ scene::Group build_track(
 
 scene::Group build_tick(
     const Tick & tick,
-    const std::shared_ptr<Projection> & projection)
+    const std::shared_ptr<Projection> & projection,
+    ln_lnlat_posn observer, double t)
 {
     scene::Group group{"tick", tick.name, {}};
 
-    double ln_equ_posn::* locked;
-    double ln_equ_posn::* rolling;
+    typedef std::pair<double, double> dpair;
+    double dpair::* locked;
+    double dpair::* rolling;
     switch (tick.plane)
     {
         case Plane::Parallel:
-            locked = &ln_equ_posn::dec;
-            rolling = &ln_equ_posn::ra;
+            locked = &dpair::second;
+            rolling = &dpair::first;
             break;
         case Plane::Meridian:
-            locked = &ln_equ_posn::ra;
-            rolling = &ln_equ_posn::dec;
+            locked = &dpair::first;
+            rolling = &dpair::second;
             break;
     }
 
@@ -182,10 +184,10 @@ scene::Group build_tick(
         else
             str = stringify(angle{p}, as_degree);
 
-        ln_equ_posn pos;
+        dpair pos;
         pos.*locked = tick.base.val;
         pos.*rolling = p;
-        group.elements.push_back(scene::Text{str, projection->project(pos)});
+        group.elements.push_back(scene::Text{str, projection->project(convert_to_equ(tick.coordinates, pos, observer, t))});
     }
 
     return group;

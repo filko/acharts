@@ -200,7 +200,7 @@ int main(int arc, char * arv[])
         std::cout << "Drawing ticks... " << std::flush;
         for (auto tick : config.view<Tick>())
         {
-            scn.add_group(scene::build_tick(tick, projection));
+            scn.add_group(scene::build_tick(tick, projection, observer, t));
         }
         std::cout << "done." << std::endl;
 
