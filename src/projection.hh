@@ -53,11 +53,12 @@ public:
 
 protected:
     virtual CanvasPoint project_imp(const SphericalCoord & pos) const = 0;
+    virtual void rotate_to_level_imp();
 
     const CanvasPoint canvas_;
     SphericalCoord apparent_canvas_;
     const SphericalCoord center_;
-    double rotation_, rotationSin_, rotationCos_;
+    long double rotationSin_, rotationCos_;
 };
 
 class ProjectionFactory

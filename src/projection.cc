@@ -78,20 +78,7 @@ vec<T, 3> cross(const vec<T, 3> & l, const vec<T, 3> & r)
                     }}};
 }
 
-SphericalCoord rotate(SphericalCoord pos, SphericalCoord axis, long double rot)
-{
-    typedef vec<long double, 3> vec3;
-    pos.dec = M_PI_2 - pos.dec;
-    axis.dec = M_PI_2 - axis.dec;
-    vec3 a = {{{sin(pos.dec) * cos(pos.ra),   sin(pos.dec) * sin(pos.ra),   cos(pos.dec)}}};
-
-    vec3 k = {{{sin(axis.dec) * cos(axis.ra), sin(axis.dec) * sin(axis.ra), cos(axis.dec)}}};
-
-    vec3 b = std::cos(rot) * a + std::sin(rot) * cross(k, a) + (k * a) * (1. - std::cos(rot)) * k;
-
-    return SphericalCoord(double(std::atan2(b[1], b[0])),
-                          double(M_PI_2 - std::atan2(std::hypot(b[0], b[1]), b[2])));
-}
+typedef vec<long double, 3> vec3;
 
 }
 
@@ -108,7 +95,7 @@ SphericalCoord::SphericalCoord(double r, double d)
 
 Projection::Projection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas, const ln_equ_posn & center)
     : canvas_(canvas), apparent_canvas_(apparent_canvas), center_(center),
-      rotation_(0), rotationSin_(0.), rotationCos_(1.)
+      rotationSin_(0.), rotationCos_(1.)
 {
     if (0. == apparent_canvas_.ra)
     {
@@ -149,8 +136,12 @@ void Projection::rotate_to_level(const ln_equ_posn & beg, const ln_equ_posn & en
     double angle(M_PI - std::atan2(diff.y, diff.x));
     rotationSin_ = std::sin(angle);
     rotationCos_ = std::cos(angle);
-    rotation_ = angle;
+
+    this->rotate_to_level_imp();
 }
+
+void Projection::rotate_to_level_imp()
+{ }
 
 double Projection::max_distance() const
 {
@@ -193,15 +184,17 @@ public:
 class CylindricalEquidistantProjection
     : public Projection
 {
+    vec3 rotation_axis_;
 public:
     CylindricalEquidistantProjection(const CanvasPoint & canvas, const ln_equ_posn & apparent_canvas,
                                      const ln_equ_posn & center)
-        : Projection(canvas, apparent_canvas, center)
+        : Projection(canvas, apparent_canvas, center),
+          rotation_axis_{{{ 1., 0., 0. }}}
     { }
 
     virtual CanvasPoint project_imp(const SphericalCoord & pos) const
     {
-        SphericalCoord rotated = rotate(pos, center_, rotation_);
+        SphericalCoord rotated = rotate(pos);
         double x(rotated.ra - center_.ra);
         if (x > M_PI)
             x -= 2 * M_PI;
@@ -213,6 +206,25 @@ public:
         // negate y, because right ascention is going left to right
         return CanvasPoint(-x * canvas_.x / apparent_canvas_.ra,
                            -y * canvas_.y / apparent_canvas_.dec);
+    }
+
+    virtual void rotate_to_level_imp()
+    {
+        SphericalCoord axis(center_);
+        axis.dec = M_PI_2 - axis.dec;
+        rotation_axis_ = {{{sin(axis.dec) * cos(axis.ra), sin(axis.dec) * sin(axis.ra), cos(axis.dec)}}};
+    }
+
+private:
+    SphericalCoord rotate(SphericalCoord pos) const
+    {
+        pos.dec = M_PI_2 - pos.dec;
+
+        vec3 a = {{{sin(pos.dec) * cos(pos.ra),   sin(pos.dec) * sin(pos.ra),   cos(pos.dec)}}};
+        vec3 b = rotationCos_ * a + rotationSin_ * cross(rotation_axis_, a) + (rotation_axis_ * a) * (1. - rotationCos_) * rotation_axis_;
+
+        return SphericalCoord(double(std::atan2(b[1], b[0])),
+                              double(M_PI_2 - std::atan2(std::hypot(b[0], b[1]), b[2])));
     }
 };
 
