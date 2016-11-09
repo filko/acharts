@@ -31,7 +31,6 @@ class Catalogue;
 class CatalogParsingDescription;
 
 class ConstStarIterator
-    : public std::iterator<std::input_iterator_tag, Star>
 {
     friend class Catalogue;
 
@@ -41,6 +40,12 @@ class ConstStarIterator
     }
 
 public:
+    using difference_type = long;
+    using value_type = Star;
+    using pointer = const value_type*;
+    using reference = const value_type&;
+    using iterator_category = std::input_iterator_tag;
+
     ~ConstStarIterator() = default;
 
     const Star * operator->() const;
