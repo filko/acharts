@@ -1,0 +1,118 @@
+[core]
+location.latitude 50d34m
+location.longitude 16d40m
+epoch J2000
+t "00:00 2016-01-01"
+stylesheet examples/default.css
+constellations on
+
+[canvas]
+dimensions.x 500mm
+dimensions.y 40mm
+
+[projection]
+type cylindricalequidistant
+
+centre.ra 0
+centre.dec 0
+
+dimensions.ra 360d
+dimensions.dec 0
+
+level ecliptic
+
+[planets]
+# we're not drawing Venus as she's too bright all year
+enable Mercury,Mars,Jupiter,Saturn,Uranus,Neptune,Pluto
+
+[moon]
+enable on
+
+[sun]
+enable on
+
+[track]
+object Mercury
+start t
+length 365JD
+mark-interval 10JD
+
+[track]
+object Venus
+start t
+length 365JD
+mark-interval 10JD
+
+[track]
+object Mars
+start t
+length 365JD
+mark-interval 10JD
+
+[track]
+object Jupiter
+start t
+length 365JD
+mark-interval 30JD
+
+[track]
+object Saturn
+start t
+length 365JD
+mark-interval 90JD
+
+[track]
+object Uranus
+start t
+length 365JD
+mark-interval 90JD
+
+[track]
+object Neptune
+start t
+length 365JD
+mark-interval 90JD
+
+[track]
+object Pluto
+start t
+length 365JD
+mark-interval 90JD
+
+[track]
+object Sun
+start t
+length 365JD
+mark-interval 10JD
+
+[grid]
+name parallels
+coordinates equatorial
+plane parallel
+start -60d
+end 60d
+step 30d
+
+[grid]
+name meridians
+coordinates equatorial
+plane meridians
+start -90
+end 90
+step 30d
+
+[grid]
+name ecliptic
+coordinates ecliptic
+plane parallel
+start 0
+end 0
+
+[tick]
+name tick-ra
+coordinates equatorial
+plane parallel
+start 0
+end 360d
+step 1h
+display as_hours

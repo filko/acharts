@@ -33,9 +33,38 @@
     fill: black;
 }
 
-.tracks path, .tracks line {
+.tracks path {
     stroke: gray;
     stroke-width: 0.3;
+}
+
+.tracks line {
+    stroke: gray;
+    stroke-width: 0.1;
+}
+
+#Mercury * {
+    stroke: darkgrey;
+}
+
+#Venus * {
+    stroke: dodgerblue;
+}
+
+#Mars * {
+    stroke: red;
+}
+
+#Jupiter * {
+    stroke: orange;
+}
+
+#Saturn * {
+    stroke: sandybrown;
+}
+
+#Neptune *, #Uranus * {
+    stroke: cornflowerblue;
 }
 
 .grid path {
