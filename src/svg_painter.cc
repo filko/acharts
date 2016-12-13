@@ -152,7 +152,7 @@ SvgPainter::SvgPainter(std::ostream & os, const CanvasPoint & canvas, double can
         "viewBox='" << -imp_->canvas_.x / 2. << ' ' << -imp_->canvas_.y / 2. <<
         ' ' << imp_->canvas_.x << ' ' << imp_->canvas_.y << "' "
         "xmlns='http://www.w3.org/2000/svg' version='1.1'>\n"
-        "<style type='text/css'>\n" << imp_->style_ << "</style>\n";
+        "<style type='text/css'><![CDATA[\n" << imp_->style_ << "\n]]></style>\n";
 }
 
 SvgPainter::~SvgPainter()
